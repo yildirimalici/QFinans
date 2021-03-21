@@ -1,0 +1,371 @@
+﻿@using QFinans.Models;
+@using Microsoft.AspNet.Identity
+@{
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _user = db.Users.Find(User.Identity.GetUserId());
+    DateTime startDate = DateTime.Now.Date;
+    DateTime endDate = DateTime.Now.AddDays(1).Date;
+    var newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+    var newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+
+    var _activePaparaCount = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).Count();
+
+    var _activeBankCount = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).Count();
+
+    var _activeAccountCount = _activePaparaCount + _activeBankCount;
+
+    var emergencyAccountId = db.SystemParameters.Select(x => (x.EmergencyAccountId == null ? 337 : x.EmergencyAccountId)).FirstOrDefault();
+}
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - QFinans</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+</head>
+<body class="d-flex flex-column h-100">
+
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container-fluid">
+            @Html.ActionLink("QFinans", "Index", "Home", new { area = "" }, new { @class = "navbar-brand text-white" })
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    @if (Request.IsAuthenticated)
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link text-white" href="@Url.Action("Index", "Home")"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-wallet"></i> Hesaplar <span class="badge badge-light" id="navbarActiveAccountCount">@_activeAccountCount</span>
+                            </a>
+                            <div class="dropdown-menu mb-2" aria-labelledby="navbarDropdown">
+                                @if (User.IsInRole("IndexAccountInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "AccountInfo")">Hesaplar <span class="badge badge-light" id="navbarActivePaparaCount">@_activePaparaCount</span></a>
+                                }
+
+                                @if (User.IsInRole("ArchiveAccountAccountInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("ArchiveAccount", "AccountInfo")">Arşivlenen Hesaplar</a>
+                                }
+
+                                @if (User.IsInRole("IndexCoinbases"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Coinbases")">Coinbase</a>
+                                }
+
+                                @if (User.IsInRole("IndexBankInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "BankInfo")">Banka Hesapları <span class="badge badge-light" id="navbarActiveBankCount">@_activeBankCount</span></a>
+                                }
+
+                                @if (User.IsInRole("ArchiveBankInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Archive", "BankInfo")">Arşivlenen Banka Hesapları  </a>
+                                }
+                            </div>
+                        </li>
+                        if (User.IsInRole("DepositAccountTransactions"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="@Url.Action("Deposit", "AccountTransactions")">
+                                    <i class="fas fa-arrow-circle-down"></i> Yatırım <span class="badge badge-light" id="navbarNewDepositCount">@newDepositCount</span>
+                                </a>
+                            </li>
+                        }
+
+                        if (User.IsInRole("DrawAccountTransactions"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="@Url.Action("Draw", "AccountTransactions")">
+                                    <i class="fas fa-arrow-circle-up"></i> Çekim <span class="badge badge-light" id="navbarNewDrawCount">@newDrawCount</span>
+                                </a>
+                            </li>
+                        }
+
+                        if (User.IsInRole("IndexCashFlow"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="@Url.Action("Index", "CashFlow")"><i class="far fa-list-alt"></i> Hesap Hareketleri</a>
+                            </li>
+                        }
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-chart-pie"></i> Raporlar</a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                @if (User.IsInRole("IndexReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Report")">Günlük İşlem Raporu</a>
+                                }
+
+                                @if (User.IsInRole("MonthlyReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Monthly", "Report")">Aylık İşlem Raporu</a>
+                                }
+
+                                @if (User.IsInRole("BalanceReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Balance", "Report")">Bakiye Raporu</a>
+                                }
+
+                                @if (User.IsInRole("CashFlowReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("CashFlow", "Report")">Günlük Hesap Hareketi Raporu</a>
+                                }
+                            </div>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-cogs"></i> İşlemler</a>
+                            <div class="dropdown-menu mb-2" aria-labelledby="navbarDropdown">
+
+                                @if (User.IsInRole("TotalAmountAccountInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("TotalAmount", "AccountInfo")">Bakiye Bilgileri</a>
+                                }
+
+                                @if (User.IsInRole("IndexBlackList"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "BlackList")">Black List</a>
+                                }
+
+                                @*@if (User.IsInRole("IndexShift"))
+                                    {
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Shift")">Shift</a>
+                                    }*@
+
+                                @if (User.IsInRole("IndexAppUser"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "AppUser")">Kullanıcı Bilgileri</a>
+                                }
+
+                            </div>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-book"></i> Tanımlar</a>
+                            <div class="dropdown-menu mb-2" aria-labelledby="navbarDropdown">
+                                @if (User.IsInRole("IndexAccountInfoType"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "AccountInfoType")">Hesap Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexAccountAmountRedirect"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "AccountAmountRedirect")">Tutar Yönlendirme Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexAccountInfoStatus"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "AccountInfoStatus")">Hesap Durumu</a>
+                                }
+
+                                @if (User.IsInRole("IndexCashFlowType"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "CashFlowType")">İşlem Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexSimLocation"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "SimLocation")">SIM Lokasyon Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexShiftType"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "ShiftType")">Shift Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexBankType"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "BankType")">Banka Türü</a>
+                                }
+
+                                @if (User.IsInRole("IndexCustomerBankInfo"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "CustomerBankInfo")">Müşteri Bankaları</a>
+                                }
+
+                                @if (User.IsInRole("IndexMoneyTransferType"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "MoneyTransferType")">İşlem Türü (H/EFT)</a>
+                                }
+
+                                @if (User.IsInRole("SystemParameters"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "SystemParameters")">Parametreler</a>
+                                }
+
+                            </div>
+                        </li>
+                    }
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid body-content my-4">
+
+        @if (_activeAccountCount == 0)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <i class="fas fa-exclamation-triangle"></i> Aktif hesap bulunmamaktadır. <b><i>Şuan @emergencyAccountId id li hesap işlemdedir.</i></b> Lütfen bir tane aktif hesap belirleyiniz. Belirlediğiniz hesabın <b>aktif</b> olmasına, <b>pasif</b> ol<b>ma</b>masına, <b>arşiv</b>de olmamasına ve <b>hazır</b> hesap olmasına dikkat ediniz.
+            </div>
+        }
+
+        @if (TempData["info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["info"]
+            </div>
+        }
+
+        @if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["success"]
+            </div>
+        }
+
+        @if (TempData["warning"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["warning"]
+            </div>
+        }
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["error"]
+            </div>
+        }
+
+        @Html.Hidden("GetTrans", Url.Action("GetNotificationAccountTransactions", "Home"))
+        @Html.Hidden("GetNav", Url.Action("GetDashboardJsonData", "Home"))
+        @Html.Hidden("GetHide", Url.Action("NotificationHideAllData", "Home"))
+
+        @RenderBody()
+    </div>
+
+    <div class="mt-auto footer">
+        <hr class="mt-0" />
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between">
+                <footer>
+                    <p>&copy; @DateTime.Now.Year - QFinans</p>
+                </footer>
+                <span>version 1.8</span>
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+
+    <script type="text/javascript">
+
+        function formatCurrency(price) {
+
+            var currency_symbol = "₺"
+
+            var formattedOutput = new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: 'TRY',
+                minimumFractionDigits: 0,
+            });
+
+            return formattedOutput.format(price).replace(currency_symbol, '')
+        };
+
+        var options = {
+            classname: "toast",
+            transition: "slideLeftFade",
+            insertBefore: true,
+            duration: 4000,
+            enableSounds: true,
+            autoClose: true,
+            progressBar: true,
+            sounds: {
+                info: "@Url.Content("~/Content/toasty/sounds/info/1.mp3")",
+                success: "@Url.Content("~/Content/toasty/sounds/success/1.mp3")",
+                warning: "@Url.Content("~/Content/toasty/sounds/warning/1.mp3")",
+                error: "@Url.Content("~/Content/toasty/sounds/error/1.mp3")",
+            },
+
+            // callback:
+            // onShow function will be fired when a toast message appears.
+            onShow: function (type) { },
+
+            // callback:
+            // onHide function will be fired when a toast message disappears.
+            onHide: function (type) { },
+
+            // the placement where prepend the toast container:
+            prependTo: document.body.childNodes[0]
+        };
+
+        // using the main Toasty function:
+        var customToast = new Toasty(options);
+        // or this public method:
+        //customToast.configure(options);
+
+        setInterval(function () {
+            $.getJSON('/Home/NotificationShowData', function (data) {
+                if (data.id != 0) {
+                    if (data.deposit == true) {
+                        var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında yatırım talebi var.";
+                        customToast.success(msg);
+                    } else {
+                        var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında çekim talebi var.";
+                        customToast.error(msg);
+                    };
+                    $.getJSON('/Home/NotificationHideData/' + data.id);
+                }
+            });
+
+        }, 10000);
+        setInterval(function () {
+            $.getJSON('/Home/GetDashboardJsonData', function (data) {
+                //İşlemler...
+                $("#navbarNewDepositCount").html(formatCurrency(data.NewDepositCount));
+                $("#navbarNewDrawCount").html(formatCurrency(data.NewDrawCount));
+                $("#navbarActiveAccountCount").html(data.ActiveTotalAccountCount);
+                $("#navbarActivePaparaCount").html(data.ActivePaparaCount);
+                $("#navbarActiveBankCount").html(data.ActiveBankCount);
+            });
+            $.getJSON('/Home/SetAccountAsPassive/');
+        }, 13000);
+
+    </script>
+
+    @RenderSection("scripts", required: false)
+
+    <script>
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+        });
+    </script>
+
+</body>
+</html>

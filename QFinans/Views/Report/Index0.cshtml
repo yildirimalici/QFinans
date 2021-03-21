@@ -1,0 +1,192 @@
+﻿@model IEnumerable<QFinans.Models.DailyTansactionReportSumViewModel>
+
+@{
+    ViewBag.Title = "DailyTransactionReport";
+
+    var data = Model.GroupBy(x => new { x.Year, x.Month }).Select(g => new
+    {
+        year = g.Key.Year,
+        month = g.Key.Month,
+        date = new DateTime(g.Key.Year, g.Key.Month, 1),
+        confirmDepositCount = g.Sum(x => x.ConfirmDepositCount),
+        confirmDepositSum = g.Sum(x => x.ConfirmDepositSum),
+        confirmDrawCount = g.Sum(x => x.ConfirmDrawCount),
+        confirmDrawSum = g.Sum(x => x.ConfirmDrawSum)
+    });
+
+}
+
+<div class="card">
+    <div class="card-body">
+        @*<div class="d-flex justify-content-between mb-3 border-bottom">
+                <h5 class="card-title">Günlük İşlem Raporu</h5>
+            </div>*@
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="home-tab" data-toggle="tab" href="#home" role="tab" aria-controls="home" aria-selected="true">Günlük İşlem Raporu</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="profile-tab" data-toggle="tab" href="#profile" role="tab" aria-controls="profile" aria-selected="false">Aylık İşlem Raporu</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="balance-tab" data-toggle="tab" href="#balance" role="tab" aria-controls="balance" aria-selected="false">Bakiye Raporu</a>
+            </li>
+        </ul>
+        <div class="tab-content" id="myTabContent">
+            <div class="tab-pane fade show active" id="home" role="tabpanel" aria-labelledby="home-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Onaylı Yatırım Sayısı</th>
+                                <th>Onaylı Yatırım Tutarı</th>
+                                <th>Onaylı Çekim Sayısı</th>
+                                <th>Onaylı Çekim Tutarı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="text-center">@(Convert.ToDateTime((item.Day + "." + item.Month + "." + item.Year)).ToShortDateString())</td>
+                                    <td class="text-right">@item.ConfirmDepositCount.ToString("N0")</td>
+                                    <td class="text-right">@item.ConfirmDepositSum.ToString("N2")</td>
+                                    <td class="text-right">@item.ConfirmDrawCount.ToString("N0")</td>
+                                    <td class="text-right">@item.ConfirmDrawSum.ToString("N2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Toplam</th>
+                                <th class="text-right">@Model.Sum(x => x.ConfirmDepositCount).ToString("N0")</th>
+                                <th class="text-right">@Model.Sum(x => x.ConfirmDepositSum).ToString("N2")</th>
+                                <th class="text-right">@Model.Sum(x => x.ConfirmDrawCount).ToString("N0")</th>
+                                <th class="text-right">@Model.Sum(x => x.ConfirmDrawSum).ToString("N2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-bordered table-dark text-white-50" id="reportTable2">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Onaylı Yatırım Sayısı</th>
+                                <th>Onaylı Yatırım Tutarı</th>
+                                <th>Onaylı Çekim Sayısı</th>
+                                <th>Onaylı Çekim Tutarı</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in data)
+                            {
+                                <tr>
+                                    <td class="text-center">
+                                        <a class="btn btn-link p-0" data-toggle="collapse" href="#collapseExample-@item.date.ToString("MM-yyyy")" role="button" aria-expanded="false" aria-controls="collapseExample">
+                                            <i class="fas fa-plus-circle"></i> @item.date.ToString("MMM yyyy")
+                                        </a>
+                                    </td>
+                                    <td class="text-right">@item.confirmDepositCount.ToString("N0")</td>
+                                    <td class="text-right">@item.confirmDepositSum.ToString("N2")</td>
+                                    <td class="text-right">@item.confirmDrawCount.ToString("N0")</td>
+                                    <td class="text-right">@item.confirmDrawSum.ToString("N2")</td>
+                                </tr>
+                                <tr class="collapse border-0" id="collapseExample-@item.date.ToString("MM-yyyy")">
+                                    <td colspan="5" class="m-0 p-1 border-0">
+                                        <table class="table table-sm table-bordered table-dark text-white-50 m-0" id="reportTableDetails">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Onaylı Yatırım Sayısı</th>
+                                                    <th>Onaylı Yatırım Tutarı</th>
+                                                    <th>Onaylı Çekim Sayısı</th>
+                                                    <th>Onaylı Çekim Tutarı</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item2 in Model.Where(x => x.Year == item.year && x.Month == item.month))
+                                                {
+                                                    <tr>
+                                                        <td class="text-center">@(Convert.ToDateTime((item2.Day + "." + item2.Month + "." + item2.Year)).ToShortDateString())</td>
+                                                        <td class="text-right">@item2.ConfirmDepositCount.ToString("N0")</td>
+                                                        <td class="text-right">@item2.ConfirmDepositSum.ToString("N2")</td>
+                                                        <td class="text-right">@item2.ConfirmDrawCount.ToString("N0")</td>
+                                                        <td class="text-right">@item2.ConfirmDrawSum.ToString("N2")</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <th>Toplam</th>
+                                                    <th class="text-right">@Model.Where(x => x.Year == item.year && x.Month == item.month).Sum(x => x.ConfirmDepositCount).ToString("N0")</th>
+                                                    <th class="text-right">@Model.Where(x => x.Year == item.year && x.Month == item.month).Sum(x => x.ConfirmDepositSum).ToString("N2")</th>
+                                                    <th class="text-right">@Model.Where(x => x.Year == item.year && x.Month == item.month).Sum(x => x.ConfirmDrawCount).ToString("N0")</th>
+                                                    <th class="text-right">@Model.Where(x => x.Year == item.year && x.Month == item.month).Sum(x => x.ConfirmDrawSum).ToString("N2")</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Toplam</th>
+                                <th class="text-right">@data.Sum(x => x.confirmDepositCount).ToString("N0")</th>
+                                <th class="text-right">@data.Sum(x => x.confirmDepositSum).ToString("N2")</th>
+                                <th class="text-right">@data.Sum(x => x.confirmDrawCount).ToString("N0")</th>
+                                <th class="text-right">@data.Sum(x => x.confirmDrawSum).ToString("N2")</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="balance" role="tabpanel" aria-labelledby="balance-tab">
+                <div class="table-responsive mt-3">
+                    <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="reportTable3">
+                        <thead>
+                            <tr>
+                                <th>Tarih</th>
+                                <th>Yatırım</th>
+                                <th>Komisyon</th>
+                                <th>Çekim</th>
+                                <th>Bakiye</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr>
+                                    <td class="text-center">@(Convert.ToDateTime((item.Day + "." + item.Month + "." + item.Year)).ToShortDateString())</td>
+                                    <td class="text-right">@((item.ConfirmDepositSum + item.NewDepositSum).ToString("N2"))</td>
+                                    <td class="text-right">@(((item.ConfirmDepositSum + item.NewDepositSum) * ViewBag.BankCharge / 100).ToString("N2"))</td>
+                                    <td class="text-right">@item.ConfirmDrawSum.ToString("N2")</td>
+                                    <td class="text-right">@(((item.ConfirmDepositSum + item.NewDepositSum) - ((item.ConfirmDepositSum + item.NewDepositSum) * ViewBag.BankCharge / 100) - item.ConfirmDrawSum).ToString("N2"))</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Toplam</th>
+                                <th class="text-right">@(((Model.Sum(x => x.ConfirmDepositSum)) + (Model.Sum(x => x.NewDepositSum))).ToString("N2"))</th>
+                                <th class="text-right">@((((Model.Sum(x => x.ConfirmDepositSum)) + (Model.Sum(x => x.NewDepositSum))) * ViewBag.BankCharge / 100).ToString("N2"))</th>
+                                <th class="text-right">@Model.Sum(x => x.ConfirmDrawSum).ToString("N2")</th>
+                                <th class="text-right">@((((Model.Sum(x => x.ConfirmDepositSum)) + (Model.Sum(x => x.NewDepositSum))) - (((Model.Sum(x => x.ConfirmDepositSum)) + (Model.Sum(x => x.NewDepositSum))) * ViewBag.BankCharge / 100) - Model.Sum(x => x.ConfirmDrawSum)).ToString("N2"))</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

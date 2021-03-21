@@ -1,0 +1,310 @@
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.CashFlow>
+@using PagedList.Mvc;
+@using Microsoft.AspNet.Identity
+@using QFinans.Models;
+@{
+    ViewBag.Title = "Hesap Hareketleri";
+    var _date = DateTime.Now;
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _user = db.Users.Find(User.Identity.GetUserId());
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 border-bottom">
+            <h5 class="card-title">Hesap Hareketleri</h5>
+            <div>
+                <button type="submit" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#addTransfer" data-whatever=""><i class="fas fa-plus-circle"></i> Virman Ekle</button>
+                <a class="btn btn-xs btn-success" href="@Url.Action("Create", "CashFlow")"><i class="fas fa-plus-circle"></i> Hareket Ekle</a>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addTransfer" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hespalar Arası Virman Ekle</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    @using (Html.BeginForm("AddTransfer", "CashFlow", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input name="action" type="hidden" value="1">
+                        <div class="modal-body">
+
+                            <div class="form-group">
+                                <label for="selectFromAccountInfoId">Çıkış Yapılan Hesap</label>
+                                <select class="custom-select select2" id="selectFromAccountInfoId" name="fromAccountInfoId" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var item in ViewBag.AccountInfo)
+                                    {
+                                        <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectToAccountInfoId">Giriş Yapılan Hesap</label>
+                                <select class="custom-select select2" id="selectToAccountInfoId" name="toAccountInfoId" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var item in ViewBag.AccountInfo)
+                                    {
+                                        <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            @if (_user.IsAdmin == true)
+                            {
+                                <div class="form-group">
+                                    <label for="TransactionDate">İşlem Tarihi</label>
+                                    <input class="form-control" id="TransactionDate" name="TransactionDate" type="datetime-local" value="@_date.ToString("yyyy-MM-ddTHH:mm")" required>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="form-group d-none">
+                                    <label for="TransactionDate">İşlem Tarihi</label>
+                                    <input class="form-control" id="TransactionDate" name="TransactionDate" type="datetime-local" value="@_date.ToString("yyyy-MM-ddTHH:mm")" required>
+                                </div>
+                            }
+
+                            <div class="form-group">
+                                <label for="Amount">Tutar</label>
+                                <input class="form-control" id="Amount" name="Amount" type="number" value="" required>
+                            </div>
+
+                            <fieldset class="form-group">
+                                <div class="row">
+                                    <label class="col-form-label col-sm-2 pt-0">İşlem Durumu</label>
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="IsFree" id="IsFree" value="true" required>
+                                            <label class="form-check-label" for="IsFree">
+                                                Ücretsiz
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="IsFree" id="IsNotFree" value="false">
+                                            <label class="form-check-label" for="IsNotFree">
+                                                Ücretli
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <div class="form-group">
+                                <label for="explanation">Açıklama</label>
+                                <textarea class="form-control" id="explanation" name="explanation" rows="4"></textarea>
+                            </div>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        @using (Html.BeginForm("Index", "CashFlow", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-4 align-items-end">
+                <div class="col-md-12">
+                    <select class="custom-select custom-select-sm mr-2" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="250">250</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-xl-4">
+                    <label>Hesap</label>
+                    <select class="custom-select select2" id="selectAccount" name="accountInfoId">
+                        <option>Seçiniz</option>
+                        @foreach (var item in ViewBag.AccountInfo)
+                        {
+                            <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-xl-4">
+                    <label>İşlem Türü</label>
+                    <select class="custom-select select2" id="selectCashFlowType" name="cashFlowTypeId">
+                        <option>Seçiniz</option>
+                        @foreach (var item in ViewBag.CashFlowType)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-xl-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Başlangıç</label>
+                            @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control", @Type = "date" })
+                        </div>
+                        <div class="col-md-6">
+                            <label>Bitiş</label>
+                            @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control", @Type = "date" })
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4 align-items-end">
+                <div class="col-lg-6">
+                    <div>
+                        <label>Arama kelimesi</label>
+                        @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control form-control-sm", @placeholder = "Arama yapmak için bir kelime yazın" })
+                    </div>
+                </div>
+
+                <div class="col-lg-auto ml-auto">
+                    <button class="btn btn-sm btn-info mt-3" type="submit"><i class="fas fa-search"></i> Ara</button>
+                </div>
+
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Id</th>
+                    <th>İşlem Tarihi</th>
+                    <th>Hesap</th>
+                    <th>Tutar</th>
+                    <th>İşlem Türü</th>
+                    <th>Virman</th>
+                    <th>Hareket Türü</th>
+                    <th>@ViewBag.CashFlowSum.ToString("N0")</th>
+                </tr>
+
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.TransactionDate)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AccountInfo.Name) @Html.DisplayFor(modelItem => item.AccountInfo.SurName) (@Html.DisplayFor(modelItem => item.AccountInfo.AccountNumber))
+                        </td>
+                        <td class="text-right">
+                            @String.Format("{0:N0}", item.Amount)
+                        </td>
+                        <td>
+                            @if (item.AddUserId == "user_bot")
+                            {
+                                <span>@Html.DisplayFor(modelItem => item.Explanation)</span>
+                            }
+                            else
+                            {
+                                <span>@Html.DisplayFor(modelItem => item.CashFlowType.Name)</span>
+                            }
+                        </td>
+
+                        @if (item.IsTransfer == true)
+                        {
+                            <td class="text-center"><i class="fas fa-check"></i></td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (item.IsCashIn == true)
+                        {
+                            <td><span class="badge badge-success">Cash In</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-danger">Cash Out</span></td>
+                        }
+                        <td>
+                            <a class="btn btn-xs btn-info" href="@Url.Action("Details", "CashFlow", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                            <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "CashFlow", new { id = item.Id })" title="Düzenle"><i class="far fa-edit"></i></a>
+                            <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                            <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Sil</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        @using (Html.BeginForm("Delete", "CashFlow", new { id = item.Id }, FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <div class="modal-body">
+                                                <div class="alert alert-danger" role="alert">
+                                                    Silmek istediğinizden emin misiniz?
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                                <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                                            </div>
+                                        }
+
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+
+            </table>
+        </div>
+
+        <hr />
+        <div class="row">
+            <div class="col-sm-2">
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-10">
+                @Html.PagedListPager(Model, page => Url.Action("Index", "CashFlow", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+        });
+
+        $("#selectAccount").val(@ViewBag.CurrentAccountInfoId);
+        $("#selectCashFlowType").val(@ViewBag.CurrentCashFlowTypeId);
+
+        $("#selectPageSize").val(@ViewBag.CustomPageSize);
+        function getPageSize() {
+            $("#formSearch").submit();
+        };
+    </script>
+}

@@ -1,0 +1,24 @@
+﻿@{
+    ViewBag.Title = "Contact";
+}
+
+
+@{
+    ViewBag.Title = "Customer";
+}
+
+<h2>Customer Details</h2>
+
+@Html.Hidden("GetTrans", Url.Action("GetNotificationAccountTransactions", "Home"))
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Username</th>
+            <th>Amount</th>
+        </tr>
+    </thead>
+
+    <tbody id="tblInfo"></tbody>
+</table>

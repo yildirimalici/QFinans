@@ -1,0 +1,58 @@
+﻿@model QFinans.Areas.Api.Models.SystemParameters
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h2>Details</h2>
+
+<div>
+    <h4>SystemParameters</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.BankChargeTransactionLimit)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BankChargeTransactionLimit)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BankChargeAmountLimit)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BankChargeAmountLimit)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BalanceEditAmount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BalanceEditAmount)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BalanceStartDate)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BalanceStartDate)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.BankCharge)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.BankCharge)
+        </dd>
+
+    </dl>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.Id }) |
+    @Html.ActionLink("Back to List", "Index")
+</p>

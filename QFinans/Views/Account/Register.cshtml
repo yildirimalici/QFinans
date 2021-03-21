@@ -1,0 +1,406 @@
+﻿@model QFinans.Models.RegisterViewModel
+@using QFinans.Models;
+
+@{
+    ViewBag.Title = "Register";
+    ApplicationDbContext db = new ApplicationDbContext();
+    var roles = db.Roles.OrderBy(x => x.Name).ToList();
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Kullınıcı Ekle</h5>
+        <hr />
+
+        @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary("", new { @class = "text-danger" })
+
+            <div class="form-group row">
+                @Html.LabelFor(m => m.Name, new { @class = "col-md-2 control-label" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.Name, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(m => m.SurName, new { @class = "col-md-2 control-label" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.SurName, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(m => m.Email, new { @class = "col-md-2 control-label" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsAdmin, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.IsAdmin, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.IsAdmin, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(m => m.Password, new { @class = "col-md-2 control-label" })
+                <div class="col-md-10">
+                    @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-2 control-label" })
+                <div class="col-md-10">
+                    @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <h6 class="card-subtitle mb-2 text-muted mt-4">Yetkiler</h6>
+            <div class="custom-control custom-switch mb-3">
+                <input type="checkbox" class="custom-control-input" id="allCheck" onclick="setAllCheck()">
+                <label class="custom-control-label" for="allCheck">Tümünü Seç</label>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">Account/AppUser</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("Account") || x.Name.EndsWith("AppUser")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">AccountAmountRedirect</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("AccountAmountRedirect")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">AccountInfo</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("AccountInfo")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">AccountInfoStatus</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("AccountInfoStatus")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">AccountInfoType</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("AccountInfoType")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">AccountTransactions</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("AccountTransactions")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">BlackList</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("BlackList")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">CashFlow</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("CashFlowType")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">CashFlow</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("CashFlow")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">DrawSplit</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("DrawSplit")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">Report</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("Report")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">ShiftType</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("ShiftType")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">SimLocation</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("SimLocation")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">Coinbase</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("Coinbases")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                    <div class="card text-white bg-secondary mb-3">
+                        <div class="card-header">SystemParameters</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("SystemParameters")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">BankType</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("BankType")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">BankInfo</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("BankInfo") && !x.Name.Contains("Customer")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">CustomerBankInfo</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("CustomerBankInfo")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <hr />
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "AppUser")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        function setAllCheck() {
+            if (document.getElementById('allCheck').checked) {
+                var check = document.getElementsByName('RoleName')
+                for (var i = 0; i < check.length; i++) {
+                    check[i].checked = true
+                }
+            } else {
+                var check = document.getElementsByName('RoleName')
+                for (var i = 0; i < check.length; i++) {
+                    check[i].checked = false
+                }
+            }
+        }
+    </script>
+}

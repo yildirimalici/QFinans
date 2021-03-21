@@ -1,0 +1,105 @@
+﻿@model QFinans.Areas.Api.Models.CashFlow
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Hesap Hareketi Detayı</h5>
+        <hr />
+
+        <dl class="row">
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Id)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Id)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.CashFlowTypeId)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.CashFlowType.Name)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.AccountInfoId)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.AccountInfo.Name) @Html.DisplayFor(model => model.AccountInfo.SurName) (@Html.DisplayFor(model => model.AccountInfo.AccountNumber))
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.TransactionDate)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.TransactionDate)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Amount)
+            </dt>
+
+            <dd class="col-md-9">
+                @String.Format("{0:N0}", Model.Amount)
+            </dd>
+
+            @if (Model.IsCashIn == true)
+            {
+                <dt class="col-md-3">
+                    İşlem Türü
+                </dt>
+
+                <dd class="col-md-9">
+                    <span class="badge badge-success">Cash In</span>
+                </dd>
+
+                <dt class="col-md-3">
+                    İşlem Durumu
+                </dt>
+
+                <dd class="col-md-9">
+                    @if (Model.IsFree == true)
+                    {
+                        <span class="badge badge-success">Ücretsiz</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-danger">Ücretli</span>
+                    }
+                </dd>
+            }
+            else
+            {
+                <dt class="col-md-3">
+                    İşlem Türü
+                </dt>
+
+                <dd class="col-md-9">
+                    <span class="badge badge-danger">Cash Out</span>
+                </dd>
+            }
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Explanation)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Explanation)
+            </dd>
+
+
+        </dl>
+
+        <hr />
+        <a class="btn btn-sm btn-info" href="@Url.Action("Index", "CashFlow")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+    </div>
+</div>
+
+    

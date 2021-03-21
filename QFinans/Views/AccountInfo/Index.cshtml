@@ -1,0 +1,881 @@
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.AccountInfo>
+@using PagedList.Mvc;
+@using QFinans.Models
+@using QFinans.Areas.Api.Models
+@{
+    ViewBag.Title = "Hesap Bilgileri";
+
+    DateTime date = DateTime.Now.Date;
+    DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
+    DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+    ApplicationDbContext db = new ApplicationDbContext();
+    IQueryable<AccountInfo> accountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.AccountInfoType.TransactionLimit > x.TransactionCountDeposit && x.AccountInfoType.AmountLimit > x.Balance).OrderBy(x => x.OrderNumber).Take(1);
+    var _currentAccountInfoId = accountInfo.Select(x => x.Id).DefaultIfEmpty(0).FirstOrDefault();
+
+    var _accountInfoTypeId = db.AccountInfoType.Where(x => x.IsDeleted == false).OrderBy(x => x.Name);
+    var _accountAmountRedirectId = db.AccountAmountRedirect.Where(x => x.IsDeleted == false).OrderBy(x => x.Name);
+    var _simLocation = db.SimLocation.Where(x => x.IsDeleted == false).OrderBy(x => x.Name);
+    var _shift = db.ShiftType.Where(x => x.IsDeleted == false).OrderBy(x => x.StartTime).ToList();
+    var _shiftAccountIds = db.ShiftTypeAccountInfo.Where(x => x.IsDeleted == false).Select(x => x.AccountInfoId).ToArray();
+    var _shiftAccount = db.ShiftTypeAccountInfo.Where(x => x.IsDeleted == false && x.IsClosed == false).OrderByDescending(x => x.AccountInfo.OrderNumber).ToList();
+    var _shiftAccountInfoViewModel = db.AccountInfo.Where(x => x.IsDeleted == false && _shiftAccountIds.Contains(x.Id)).OrderByDescending(x => x.OrderNumber).ToList();
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 border-bottom border-secondary">
+            <h5 class="card-title">Hesap Bilgileri</h5>
+            <div>
+                <button type="submit" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#addAccountInfo" data-whatever=""><i class="fas fa-plus-circle"></i> Shifte Hesap Ekle</button>
+                <a class="btn btn-xs btn-success" href="@Url.Action("Create", "AccountInfo")"><i class="fas fa-plus-circle"></i> Yeni Hesap Ekle</a>
+            </div>
+        </div>
+
+        <div class="modal fade" id="addAccountInfo" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Şifte Hesap Ekle</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    @using (Html.BeginForm("AddAccountInfo", "ShiftType", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        <input name="action" type="hidden" value="1">
+                        <div class="modal-body">
+
+                            <div class="form-group">
+                                <label for="ShiftTypeId">Shift</label>
+                                <select class="form-control" id="ShiftTypeId" name="ShiftTypeId" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var item in _shift)
+                                    {
+                                        <option value="@item.Id">@item.Name (@item.StartTime.ToString(@"hh\:mm") - @item.EndTime.ToString(@"hh\:mm"))</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectAccountInfoId">Hesap</label>
+                                <select class="form-control select2" id="selectAccountInfoId" name="AccountInfoId" required>
+                                    <option>Seçiniz</option>
+                                    @foreach (var item in ViewBag.AccountInfo)
+                                    {
+                                        <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="AccountInfoId">Tutar Yönlendirme Türü</label>
+                                <select class="form-control select2" id="selectAccountAmountRedirectId2" name="AccountAmountRedirectId" required>
+                                    <option>Seçiniz</option>
+                                    @foreach (var item in _accountAmountRedirectId)
+                                    {
+                                        <option value="@item.Id">@item.Name</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        @ViewBag.CurrentActiveAccountId
+
+        @using (Html.BeginForm("Index", "AccountInfo", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-4 align-items-end">
+                <div class="col-md-12">
+                    <select class="custom-select custom-select-sm mr-2" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                        <option value="250">250</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-4 align-items-end">
+                <div class="col-xl-4">
+                    <label>Hesap Türü</label>
+                    <select class="custom-select select2" id="selectAccountInfoTypeId" name="accountInfoTypeId">
+                        <option>Seçiniz</option>
+                        @foreach (var item in _accountInfoTypeId)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-xl-4">
+                    <label>Tutar Yönlendirme Türü</label>
+                    <select class="custom-select select2" id="selectAccountAmountRedirectId" name="accountAmountRedirectId">
+                        <option value="">Seçiniz</option>
+                        @foreach (var item in _accountAmountRedirectId)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-xl-4">
+                    <label>Sim Lokasyonu</label>
+                    <select class="custom-select select2" id="selectSimLocationId" name="simLocationId">
+                        <option>Seçiniz</option>
+                        @foreach (var item in _simLocation)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row mb-4 align-items-end">
+
+                <div class="col-xl-3">
+                    <label>İşlem Sayısı Aralığı</label>
+                    <div class="d-flex justify-content-between">
+                        @Html.TextBox("TransactionCountDepositFrom", ViewBag.CurrentTransactionCountDepositFrom as string, new { @class = "form-control" })
+                        <span class="mx-2"></span>
+                        @Html.TextBox("TransactionCountDepositTo", ViewBag.CurrentTransactionCountDepositTo as string, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="col-xl-3">
+                    <label>Bakiye Aralığı</label>
+                    <div class="d-flex justify-content-between">
+                        @Html.TextBox("BalanceFrom", ViewBag.CurrentBalanceFrom as string, new { @class = "form-control" })
+                        <span class="mx-2"></span>
+                        @Html.TextBox("BalanceTo", ViewBag.CurrentBalanceTo as string, new { @class = "form-control" })
+                    </div>
+                </div>
+
+                <div class="col-xl-4">
+                    <label>Arama kelimesi</label>
+                    @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control", @placeholder = "Arama yapmak için bir kelime yazın" })
+                </div>
+
+                <div class="col-lg-auto ml-auto">
+                    <button class="btn btn-sm btn-info mt-3" type="submit"><i class="fas fa-search"></i> Ara</button>
+                </div>
+
+            </div>
+
+        }
+
+        <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="all-account-tab" data-toggle="tab" href="#all-account" role="tab" aria-controls="all-account" aria-selected="false">Tüm Hesaplar</a>
+            </li>
+
+            @foreach (var item in _shift)
+            {
+                <li class="nav-item">
+                    <a class="nav-link" id="active-account-tab" data-toggle="tab" href="#shift-@item.Id" role="tab" aria-controls="shift-@item.Id" aria-selected="true">@item.Name</a>
+                </li>
+            }
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+
+            <div class="tab-pane fade show active" id="all-account" role="tabpanel" aria-labelledby="all-account-tab">
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                        <tr>
+                            <th>
+                                @Html.ActionLink("Id", "Index", new { page = ViewBag.PageNumber, sortOrder = ViewBag.IdSortParm, currentFilter = ViewBag.CurrentFilter, currentAccountInfoTypeId = ViewBag.CurrentAccountInfoTypeId, currentAccountAmountRedirectId = ViewBag.CurrentAccountAmountRedirectId, currentSimLocationId = ViewBag.CurrentSimLocationId, TransactionCountDepositFrom = ViewBag.CurrentTransactionCountDepositFrom, TransactionCountDepositTo = ViewBag.CurrentTransactionCountDepositTo, BalanceFrom = ViewBag.CurrentBalanceFrom, BalanceTo = ViewBag.CurrentBalanceTo })
+                            </th>
+                            <th>
+                                İsim Soyisim
+                            </th>
+                            <th>
+                                Hesap No
+                            </th>
+                            <th>@Html.ActionLink("Bakiye", "Index", new { page = ViewBag.PageNumber, sortOrder = ViewBag.BalanceSortParm, currentFilter = ViewBag.CurrentFilter, currentAccountInfoTypeId = ViewBag.CurrentAccountInfoTypeId, currentAccountAmountRedirectId = ViewBag.CurrentAccountAmountRedirectId, currentSimLocationId = ViewBag.CurrentSimLocationId, TransactionCountDepositFrom = ViewBag.CurrentTransactionCountDepositFrom, TransactionCountDepositTo = ViewBag.CurrentTransactionCountDepositTo, BalanceFrom = ViewBag.CurrentBalanceFrom, BalanceTo = ViewBag.CurrentBalanceTo })</th>
+                            <th>
+                                @Html.ActionLink("İşlem Sayısı", "Index", new { page = ViewBag.PageNumber, sortOrder = ViewBag.TransactionCountDepositSortParm, currentFilter = ViewBag.CurrentFilter, currentAccountInfoTypeId = ViewBag.CurrentAccountInfoTypeId, currentAccountAmountRedirectId = ViewBag.CurrentAccountAmountRedirectId, currentSimLocationId = ViewBag.CurrentSimLocationId, TransactionCountDepositFrom = ViewBag.CurrentTransactionCountDepositFrom, TransactionCountDepositTo = ViewBag.CurrentTransactionCountDepositTo, BalanceFrom = ViewBag.CurrentBalanceFrom, BalanceTo = ViewBag.CurrentBalanceTo }) <span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım sayısı."><i class="fas fa-info-circle"></i></span>
+                            </th>
+                            <th>Tutar Yönlendirme</th>
+                            <th>Gsm No</th>
+                            <th>Sim Lokasyonu</th>
+                            <th>Sıra No</th>
+                            <th>Cihaz</th>
+                            <th>Son İşlem Yapan</th>
+                            <th>Durum</th>
+                            <th style="min-width:130px"></th>
+                        </tr>
+
+                        @foreach (var item in Model)
+                        {
+                            <tr style="color: #@item.AccountInfoType.TextColor; background-color: #@item.AccountInfoType.BgColor">
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Id)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Name) @Html.DisplayFor(modelItem => item.SurName)
+                                </td>
+                                <td data-toggle="tooltip" data-placement="bottom" title="@item.AccountInfoType.Name">
+                                    @Html.DisplayFor(modelItem => item.AccountNumber)
+                                </td>
+
+                                @* toplam bakiye *@
+                                <td class="text-right" style="font-size:16px; font-weight:500">
+                                    @String.Format("{0:N2}", item.Balance)
+                                </td>
+
+                                @* işlem sayısı *@
+                                <td class="text-center">
+                                    @String.Format("{0:N0}", item.TransactionCountDeposit)
+                                </td>
+
+                                <td class="text-center">@Html.DisplayFor(modelItem => item.AccountAmountRedirect.Name)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Phone)</td>
+                                <td>@Html.DisplayFor(modelItem => item.SimLocation.Name)</td>
+                                <td>@Html.DisplayFor(modelItem => item.OrderNumber)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Device)</td>
+                                <td>@Html.DisplayFor(modelItem => item.LastUser)</td>
+                                @if (item.IsPassive == false)
+                                {
+                                    <td><span class="badge badge-success">Aktif</span></td>
+                                }
+                                else
+                                {
+                                    <td><span class="badge badge-secondary">Pasif</span></td>
+                                }
+                                <td>
+                                    <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#paparaModal-@item.Id" title="Özet"><i class="fab fa-paypal"></i></button>
+
+
+                                    <a class="btn btn-xs btn-info" href="@Url.Action("Details", "AccountInfo", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                                    <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "AccountInfo", new { id = item.Id })" title="Düzenle"><i class="far fa-edit"></i></a>
+
+                                    <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#addAccountInfo" data-whatever="@item.Id" title="Hesabı Şifte Ekle"><i class="fas fa-paper-plane"></i></button>
+
+                                    <button type="button" class="btn btn-xs btn-secondary" data-toggle="modal" data-target="#archieveModal-@item.Id" title="Arşivle"><i class="fas fa-archive"></i></button>
+                                </td>
+                            </tr>
+                        }
+
+                    </table>
+                </div>
+            </div>
+
+            @foreach (var item2 in _shift)
+            {
+                <div class="tab-pane fade" id="shift-@item2.Id" role="tabpanel" aria-labelledby="home-tab">
+                    <div class="table-responsive mt-4">
+                        <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                            <tr>
+                                <th>
+                                    Id
+                                </th>
+                                <th>
+                                    İsim Soyisim
+                                </th>
+                                <th>
+                                    Hesap No
+                                </th>
+                                <th>Bakiye</th>
+                                <th>
+                                    İşlem Sayısı <span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım sayısı."><i class="fas fa-info-circle"></i></span>
+                                </th>
+                                <th>Tutar Yönlendirme</th>
+                                <th>Gsm No</th>
+                                <th>Sim Lokasyonu</th>
+                                <th>Sıra No</th>
+                                <th>Cihaz</th>
+                                <th>Son İşlem Yapan</th>
+                                <th>Durum</th>
+                                <th style="min-width:190px">@item2.StartTime.ToString(@"hh\:mm") - @item2.EndTime.ToString(@"hh\:mm")</th>
+                            </tr>
+                            @foreach (var item in _shiftAccount.Where(x => x.ShiftTypeId == item2.Id))
+                            {
+                                <tr style="color: #@item.AccountInfo.AccountInfoType.TextColor; background-color: #@item.AccountInfo.AccountInfoType.BgColor">
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.AccountInfoId)
+                                    </td>
+                                    <td>
+                                        @Html.DisplayFor(modelItem => item.AccountInfo.Name) @Html.DisplayFor(modelItem => item.AccountInfo.SurName)
+                                    </td>
+                                    <td data-toggle="tooltip" data-placement="bottom" title="@item.AccountInfo.AccountInfoType.Name">
+                                        @Html.DisplayFor(modelItem => item.AccountInfo.AccountNumber)
+                                    </td>
+
+                                    @* toplam bakiye *@
+                                    <td class="text-right" style="font-size:16px; font-weight:500">
+                                        @String.Format("{0:N2}", _shiftAccountInfoViewModel.Where(x => x.Id == item.AccountInfoId).FirstOrDefault().Balance)
+                                    </td>
+
+                                    @* işlem sayısı *@
+                                    <td class="text-center">
+                                        @String.Format("{0:N0}", _shiftAccountInfoViewModel.Where(x => x.Id == item.AccountInfoId).FirstOrDefault().TransactionCountDeposit)
+                                    </td>
+
+
+                                    <td class="text-center">@Html.DisplayFor(modelItem => item.AccountInfo.AccountAmountRedirect.Name)</td>
+
+                                    <td>@Html.DisplayFor(modelItem => item.AccountInfo.Phone)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.AccountInfo.SimLocation.Name)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.AccountInfo.OrderNumber)</td>
+                                    <td>@Html.DisplayFor(modelItem => item.AccountInfo.Device)</td>
+                                    @if (_shiftAccountInfoViewModel.Where(x => x.Id == item.AccountInfoId).Any())
+                                    {
+                                        <td>@_shiftAccountInfoViewModel.Where(x => x.Id == item.AccountInfoId).Select(x => x.LastUser).DefaultIfEmpty().FirstOrDefault()</td>
+                                    }
+                                    else
+                                    {
+                                        <td></td>
+                                    }
+
+                                    @if (item.AccountInfo.IsPassive == false)
+                                    {
+
+                                        if (item.AccountInfoId == _currentAccountInfoId)
+                                        {
+                                            <td><span class="badge badge-primary">İşlemde</span></td>
+                                        }
+                                        else
+                                        {
+                                            <td><span class="badge badge-success">Aktif</span></td>
+                                        }
+
+                                    }
+                                    else
+                                    {
+                                        <td><span class="badge badge-secondary">Pasif</span></td>
+                                    }
+                                    <td>
+                                        <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#paparaModal-@item.AccountInfoId" title="Özet"><i class="fab fa-paypal"></i></button>
+
+
+                                        <a class="btn btn-xs btn-info" href="@Url.Action("Details", "AccountInfo", new { id = item.AccountInfoId })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                                        <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "AccountInfo", new { id = item.AccountInfoId })" title="Düzenle"><i class="far fa-edit"></i></a>
+
+                                        @*@if (item.AccountInfo.IsPassive == false)
+                                            {
+                                                <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#passiveModal-@item.AccountInfoId" title="Pasifleştir"><i class="fas fa-toggle-on"></i></button>
+                                            }
+                                            else
+                                            {
+                                                <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modelActive-@item.AccountInfoId" title="Aktifleştir"><i class="fas fa-toggle-off"></i></button>
+                                            }*@
+
+                                        <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#shiftClose-@item.Id" title="Hesabı Teslim Et"><i class="fas fa-check"></i></button>
+
+                                        <button type="button" class="btn btn-xs btn-secondary" data-toggle="modal" data-target="#anotherShift-@item.Id" title="Başka Shifte Ekle"><i class="fas fa-share-square"></i></button>
+
+                                        <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#shiftDelete-@item.Id" title="Shift Sil"><i class="fas fa-trash-alt"></i></button>
+                                    </td>
+                                </tr>
+
+                            }
+
+                        </table>
+                    </div>
+                </div>
+            }
+
+        </div>
+
+
+        <hr />
+        <div class="row">
+            <div class="col-sm-2">
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-10">
+                @Html.PagedListPager(Model, page => Url.Action("Index", "AccountInfo", new { page = page, currentFilter = ViewBag.CurrentFilter, currentAccountInfoTypeId = ViewBag.CurrentAccountInfoTypeId, currentAccountAmountRedirectId = ViewBag.CurrentAccountAmountRedirectId, currentSimLocationId = ViewBag.CurrentSimLocationId, TransactionCountDepositFrom = ViewBag.CurrentTransactionCountDepositFrom, TransactionCountDepositTo = ViewBag.CurrentTransactionCountDepositTo, BalanceFrom = ViewBag.CurrentBalanceFrom, BalanceTo = ViewBag.CurrentBalanceTo })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var item in _shiftAccountInfoViewModel)
+{
+    <div class="modal fade" id="paparaModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body bg-white text-dark">
+
+                    <h4 class="text-center mb-5">Hesap Detayları</h4>
+
+                    <div class="d-flex mb-4">
+                        <div class="p-2 flex-shrink-1">
+                            <div class="bg-secondary mx-2 d-flex justify-content-center align-items-center" style="width:64px; height:64px; border-radius:50%;">
+                                <i class="far fa-user fa-3x text-white"></i>
+                            </div>
+                        </div>
+                        <div class="p-2 w-100 ml-2">
+                            <h6>@item.Name @item.SurName</h6>
+                            <span class="d-block text-muted">@item.Phone</span>
+                            <span class="d-block text-muted">@item.Email</span>
+                        </div>
+                    </div>
+
+                    <div class="mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span class="d-block text-muted mb-1">Hesap Türü</span>
+                        <span class="d-block" style="font-size:16px;">Türk Lirası Hesabı</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Hesap Tipi</span>
+                            <small class="text-muted">Onaysız, Onaylı ya da Sözleşmeli</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@item.AccountInfoType.Name</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Papara numarası</span>
+                            <small class="text-muted">Paylaşarak para transferi / ödeme alabilirsin</small>
+                        </span>
+                        <span style="color: #8c00a1 !important; font-weight: 500 !important;">@item.AccountNumber</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kullanılabilir bakiye</span>
+                            <small class="text-muted">Bekleyen işlemler dışında kullanılabilir bakiye</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.Balance)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen tutar limiti</span>
+                            <small class="text-muted">Aylık gelebilecek toplam tutar limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.AmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kalan gelen tutar limiti</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelebilecek kalan tutar</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", (item.AccountInfoType.AmountLimit - item.ConfirmDepositSumCurrentMonth + item.CashInSumCurrentMonth))</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Nakit yatırma limiti</span>
+                            <small class="text-muted">Aylık yatırılabilecek toplam nakit limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.CashInAmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kalan nakit yatırma limiti</span>
+                            <small class="text-muted">Bu ay içinde kalan nakit yatırma limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.CashInAmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Farklı kişilerden gelen transfer</span>
+                            <small class="text-muted">Bu ay içinde hesabına para transfer eden farklı kişi sayısı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@String.Format("{0:N0}", item.DifferentUsersTransactionCountDeposit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen transfer sayısı</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelen para transferi sayısı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@String.Format("{0:N0}", item.TransactionCountDeposit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen transfer tutarı</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelen para transferi tutarı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", (item.ConfirmDepositSumCurrentMonth + item.CashInSumCurrentMonth))</span>
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-info float-right" data-dismiss="modal"><i class="fas fa-times-circle"></i> Kapat</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@foreach (var item in Model.Distinct().Where(x => !_shiftAccountIds.Contains(x.Id)))
+{
+    <div class="modal fade" id="paparaModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body bg-white text-dark">
+
+                    <h4 class="text-center mb-5">Hesap Detayları</h4>
+
+                    <div class="d-flex mb-4">
+                        <div class="p-2 flex-shrink-1">
+                            <div class="bg-secondary mx-2 d-flex justify-content-center align-items-center" style="width:64px; height:64px; border-radius:50%;">
+                                <i class="far fa-user fa-3x text-white"></i>
+                            </div>
+                        </div>
+                        <div class="p-2 w-100 ml-2">
+                            <h6>@item.Name @item.SurName</h6>
+                            <span class="d-block text-muted">@item.Phone</span>
+                            <span class="d-block text-muted">@item.Email</span>
+                        </div>
+                    </div>
+
+                    <div class="mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span class="d-block text-muted mb-1">Hesap Türü</span>
+                        <span class="d-block" style="font-size:16px;">Türk Lirası Hesabı</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Hesap Tipi</span>
+                            <small class="text-muted">Onaysız, Onaylı ya da Sözleşmeli</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@item.AccountInfoType.Name</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Papara numarası</span>
+                            <small class="text-muted">Paylaşarak para transferi / ödeme alabilirsin</small>
+                        </span>
+                        <span style="color: #8c00a1 !important; font-weight: 500 !important;">@item.AccountNumber</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kullanılabilir bakiye</span>
+                            <small class="text-muted">Bekleyen işlemler dışında kullanılabilir bakiye</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.Balance)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen tutar limiti</span>
+                            <small class="text-muted">Aylık gelebilecek toplam tutar limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.AmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kalan gelen tutar limiti</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelebilecek kalan tutar</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", (item.AccountInfoType.AmountLimit - item.ConfirmDepositSumCurrentMonth + item.CashInSumCurrentMonth))</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Nakit yatırma limiti</span>
+                            <small class="text-muted">Aylık yatırılabilecek toplam nakit limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.CashInAmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Kalan nakit yatırma limiti</span>
+                            <small class="text-muted">Bu ay içinde kalan nakit yatırma limiti</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", item.AccountInfoType.CashInAmountLimit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Farklı kişilerden gelen transfer</span>
+                            <small class="text-muted">Bu ay içinde hesabına para transfer eden farklı kişi sayısı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@String.Format("{0:N0}", item.DifferentUsersTransactionCountDeposit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen transfer sayısı</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelen para transferi sayısı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">@String.Format("{0:N0}", item.TransactionCountDeposit)</span>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mx-2 border-secondary border-bottom pb-2 mb-4">
+                        <span>
+                            <span class="d-block" style="font-weight: 600 !important;">Gelen transfer tutarı</span>
+                            <small class="text-muted">Bu ay içinde hesabına gelen para transferi tutarı</small>
+                        </span>
+                        <span style="font-weight: 500 !important;">₺@String.Format("{0:N2}", (item.ConfirmDepositSumCurrentMonth + item.CashInSumCurrentMonth))</span>
+                    </div>
+
+                    <button type="button" class="btn btn-sm btn-info float-right" data-dismiss="modal"><i class="fas fa-times-circle"></i> Kapat</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*if (item.IsPassive == false)
+        {
+            <div class="modal fade" id="passiveModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Pasifleştir</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        @using (Html.BeginForm("SetPassive", "AccountInfo", new { id = item.Id }, FormMethod.Post))
+                        {
+                            @Html.AntiForgeryToken()
+
+                            <div class="modal-body">
+                                <div class="alert alert-warning" role="alert">
+                                    Pasifleştirmek istediğinizden emin misiniz?
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-toggle-off"></i> Pasifleştir</button>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="modal fade" id="modelActive-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <form action="/AccountInfo/SetActive/@item.Id" method="post" id="formActive-@item.Id">
+                            @Html.AntiForgeryToken()
+                            <div class="modal-header">
+                                <h5 class="modal-title">Aktifleştir</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="alert alert-warning" role="alert">
+                                    Akitfleştirmek istediğinizden emin misiniz?
+                                </div>
+                                <div class="form-group my-2">
+                                    <label for="selectAmountRedirectId-@item.Id">Hesap</label>
+                                    <select class="form-control select2" id="selectAmountRedirectId-@item.Id" name="accountAmountRedirectId" required>
+                                        <option>Seçiniz</option>
+                                        @foreach (var item2 in _accountAmountRedirectId)
+                                        {
+                                            <option value="@item2.Id">@item2.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                <button type="submit" class="btn btn-sm btn-primary"><i class="fas fa-toggle-on"></i> Aktifleştir</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+
+        }*@
+
+    <div class="modal fade" id="archieveModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Arşivle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                @using (Html.BeginForm("SendArchieve", "AccountInfo", new { id = item.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            Arşivlemek istediğinizden emin misiniz?
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-secondary"><i class="fas fa-archive"></i> Arşivle</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@foreach (var item in _shiftAccount.Where(x => _shift.Select(s => s.Id).ToArray().Contains(x.ShiftTypeId)))
+{
+    <div class="modal fade" id="anotherShift-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Başka Shifte Ekle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @using (Html.BeginForm("AddAccountInfo", "ShiftType", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input name="action" type="hidden" value="1">
+                    <div class="modal-body">
+                        <div class="form-group d-none">
+                            <input class="form-control" type="number" id="AccountInfoId-@item.Id" name="AccountInfoId" value="@item.AccountInfoId" readonly>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="AccountInfoId">Shift Türü</label>
+                            <select class="form-control select2" id="AccountInfoId-@item.Id" name="ShiftTypeId" required>
+                                <option>Seçiniz</option>
+                                @foreach (var item3 in _shift)
+                                {
+                                    <option value="@item3.Id">@item3.Name</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="shiftDelete-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Shifteki Hesabı Sil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @using (Html.BeginForm("DeleteAccountInfo", "ShiftType", new { id = item.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input name="action" type="hidden" value="1">
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert">
+                            Silmek istediğinizden emin misiniz?
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="shiftClose-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hesabı Şiften Çıkar</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @using (Html.BeginForm("CloseAccountInfo", "ShiftType", new { id = item.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input name="action" type="hidden" value="1">
+                    <div class="modal-body">
+                        <div class="alert alert-warning" role="alert">
+                            Hesabınızın bloke kontrolü için 'ÖDEMELER' kısmını, ardından da hesap detayları kısmından işlem/bakiye kontrolü yapınız!
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check"></i> Shiften Çıkar</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/jquery.validate.tr.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4'
+            });
+        });
+
+        $("#selectAccountInfoTypeId").val(@ViewBag.CurrentAccountInfoTypeId);
+        $("#selectAccountAmountRedirectId").val(@ViewBag.CurrentAccountAmountRedirectId);
+        $("#selectSimLocationId").val(@ViewBag.CurrentSimLocationId);
+
+        setInterval(function () {
+            window.location.reload(1);
+        }, 600000);
+
+        $("#selectPageSize").val(@ViewBag.CustomPageSize);
+
+        function getPageSize() {
+            $("#formSearch").submit();
+        };
+
+        $('#addAccountInfo').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var account = button.data('whatever') // Extract info from data-* attributes
+            //var modal = $(this)
+            $("#selectAccountInfoId").val(account).trigger('change')
+            //modal.find('.modal-body select').val(account)
+            console.log(account)
+        })
+
+    </script>
+}

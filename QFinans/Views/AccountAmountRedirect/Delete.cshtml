@@ -1,0 +1,50 @@
+﻿@model QFinans.Areas.Api.Models.AccountAmountRedirect
+
+@{
+    ViewBag.Title = "Delete";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Heap Türü Sil</h5>
+        <hr />
+
+        <dl class="row">
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Name)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Name)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.MinAmount)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.MinAmount)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.MaxAmount)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.MaxAmount)
+            </dd>
+
+        </dl>
+
+        <hr />
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-actions no-color">
+                <a class="btn btn-sm btn-info" href="@Url.Action("Index", "AccountAmountRedirect")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+                <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+            </div>
+        }
+    </div>
+</div>

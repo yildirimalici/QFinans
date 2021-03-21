@@ -1,0 +1,44 @@
+﻿@model QFinans.Areas.Api.Models.SimLocation
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Sim Lokasyon Türü Detayı</h5>
+        <hr />
+
+        <dl class="row">
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Name)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Name)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.TextColor)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.TextColor)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.BgColor)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.BgColor)
+            </dd>
+        </dl>
+
+        <hr />
+        <a class="btn btn-sm btn-info" href="@Url.Action("Index", "SimLocation")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+    </div>
+</div>
+
+
+<img src="@ViewBag.QR" />

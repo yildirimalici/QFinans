@@ -1,0 +1,121 @@
+﻿@model IEnumerable<QFinans.Areas.Api.Models.AccountTransactions>
+@using QFinans.Models
+@{
+    ViewBag.Title = "Coinbase";
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _crypto = db.Cryptocurrency.Where(x => x.IsDeleted == false).ToList();
+}
+
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Coinbase</h5>
+        <hr class="mt-2" />
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()) - Model.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum()).ToString("N2")) ₺
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum()) ₺</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-file-invoice fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()).ToString("N2")) ₺
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum()) ₺</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <h6 class="card-subtitle mb-2 mt-3 text-white-50">Kripto Para Birimleri</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Kripto</th>
+                    <th>Yatırım</th>
+                    <th>Komisyon</th>
+                    <th>Çekim</th>
+                    <th>Bakiye</th>
+                    <th></th>
+                </tr>
+                @foreach (var item in _crypto)
+                {
+                    <tr class="text-right">
+                        <td class="text-left">@item.Name (@item.UnitSymbol)</td>
+                        <td>
+                            @String.Format("{0:N2}", Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum()) ₺
+                        </td>
+                        <td>
+                            @((Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()).ToString("N2")) ₺
+                        </td>
+                        <td>
+                            @String.Format("{0:N2}", Model.Where(x => x.Deposit == false && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum()) ₺
+                        </td>
+                        <td>
+                            @((Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()) - Model.Where(x => x.Deposit == false && x.UnitSymbol == item.UnitSymbol).Select(x => x.Amount).DefaultIfEmpty(0).Sum()).ToString("N2")) ₺
+                        </td>
+                        <td>
+                            <a class="btn btn-xs btn-info" href="@Url.Action("Details", "Coinbases", new { unitSymbol = item.UnitSymbol })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+    </div>
+</div>

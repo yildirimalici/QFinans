@@ -1,0 +1,91 @@
+﻿@model IEnumerable<QFinans.Models.DailyTransactionReportCashFlowViewModel>
+
+@{
+    ViewBag.Title = "DailyTransactionReport";
+
+    var data = Model.GroupBy(x => new { x.Year, x.Month }).Select(g => new
+    {
+        year = g.Key.Year,
+        month = g.Key.Month,
+        date = new DateTime(g.Key.Year, g.Key.Month, 1),
+        cashIn = g.Sum(x => x.CashIn),
+        cashOut = g.Sum(x => x.CashIn)
+    });
+
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Günlük Hesap Hareketi Raporu</h5>
+        <hr />
+
+        @using (Html.BeginForm("CashFlow", "Report", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-4 align-items-end">
+                
+                <div class="col-md-4">
+                    <label>İşlem Türü</label>
+                    <select class="form-control form-control-sm" id="selectType" name="Type">
+                        <option>Seçiniz</option>
+                        <option value="0">Virman</option>
+                        @foreach (var item in ViewBag.Type)
+                        {
+                            <option value="@item.Id">@item.Name</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label>Başlangıç</label>
+                    @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                </div>
+                <div class="col-md-3">
+                    <label>Bitiş</label>
+                    @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                </div>
+
+                <div class="col-md-2">
+                    <div class="d-flex flex-row-reverse">
+                        <button class="btn btn-sm btn-info" type="submit"><i class="fas fa-search"></i> Ara</button>
+                    </div>
+                </div>
+
+            </div>
+        }
+
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Cah In</th>
+                        <th>Cash Out</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center">@(Convert.ToDateTime((item.Day + "." + item.Month + "." + item.Year)).ToShortDateString())</td>
+                            <td class="text-right">@item.CashIn.ToString("N0")</td>
+                            <td class="text-right">@item.CashOut.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Toplam</th>
+                        <th class="text-right">@Model.Sum(x => x.CashIn).ToString("N0")</th>
+                        <th class="text-right">@Model.Sum(x => x.CashOut).ToString("N0")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        $("#selectType").val(@ViewBag.CurrentType);
+    </script>
+}

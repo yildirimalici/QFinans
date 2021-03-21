@@ -1,0 +1,75 @@
+﻿@model QFinans.Areas.Api.Models.AccountTransactions
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">İşlem Detayı</h5>
+        <hr />
+
+        <dl class="row">
+            <dt class="col-md-3">@Html.DisplayNameFor(model => model.Id)</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.Id)</dd>
+
+            <dt class="col-md-3">Kullanıcı</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.UserName)</dd>
+
+            <dt class="col-md-3">@Html.DisplayNameFor(model => model.Name)</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.Name)</dd>
+
+            <dt class="col-md-3">@Html.DisplayNameFor(model => model.SurName)</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.SurName)</dd>
+
+            <dt class="col-md-3">@Html.DisplayNameFor(model => model.Amount)</dt>
+            <dd class="col-md-9">
+                @if (Model.Amount == Model.OldAmount)
+                {
+                    @Html.DisplayFor(model => model.Amount)
+                }
+                else
+                {
+                    <span class="badge badge-success"> @Html.DisplayFor(model => model.Amount)</span>
+                    <span class="badge badge-danger"> @Html.DisplayFor(model => model.OldAmount)</span>
+                }
+            </dd>
+
+            <dt class="col-md-3">Durum</dt>
+            <dd class="col-md-9">
+                @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm)
+                {
+                    if (Model.Amount == Model.OldAmount)
+                    {
+                        <span class="badge badge-success" id="status-@Model.Id" title="Confirm">Onay</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-warning text-wrap" id="status-@Model.Id" title="Confirm">Onay (Düzenlendi)</span>
+                    }
+                }
+                @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Deny)
+                {
+                    <span class="badge badge-danger" id="status-@Model.Id" title="Deny">Red</span>
+                }
+                @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+                {
+                    <span class="badge badge-info" id="status-@Model.Id" title="New">Yeni</span>
+                }
+            </dd>
+
+            <dt class="col-md-3">@Html.DisplayNameFor(model => model.AccountInfoId)</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.AccountInfo.Name)  @Html.DisplayFor(model => model.AccountInfo.SurName)</dd>
+
+            <dt class="col-md-3">Hesap Numarası</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.AccountInfo.AccountNumber)</dd>
+
+            <dt class="col-md-3">İşlem Tarihi</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.AddDate)</dd>
+
+            <dt class="col-md-3">Onaylanma Tarihi</dt>
+            <dd class="col-md-9">@Html.DisplayFor(model => model.ResponseDate)</dd>
+        </dl>
+    </div>
+</div>
+

@@ -1,0 +1,154 @@
+﻿@model QFinans.Areas.Api.Models.CashFlow
+@using QFinans.Models
+@using Microsoft.AspNet.Identity
+@{
+    ViewBag.Title = "Create";
+    var _date = DateTime.Now;
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _user = db.Users.Find(User.Identity.GetUserId());
+    IQueryable<QFinans.Areas.Api.Models.CashFlowType> _type = db.CashFlowType.Where(x => x.IsDeleted == false);
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Hesap Hareketi Ekle</h5>
+        <hr />
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.CashFlowTypeId, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.DropDownList("CashFlowTypeId", null, "Seçiniz", htmlAttributes: new { @class = "form-control select2", @onchange = "expRequired()" })
+                    @Html.ValidationMessageFor(model => model.CashFlowTypeId, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.AccountInfoId, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.DropDownList("AccountInfoId", null, "Seçiniz", htmlAttributes: new { @class = "form-control select2" })
+                    @Html.ValidationMessageFor(model => model.AccountInfoId, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            if (_user.IsAdmin == true)
+            {
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.TransactionDate, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.TransactionDate, new { htmlAttributes = new { @class = "form-control", @type = "datetime-local", @Value = _date.ToString("yyyy-MM-ddTHH:mm") } })
+                        @Html.ValidationMessageFor(model => model.TransactionDate, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="form-group row d-none">
+                    @Html.LabelFor(model => model.TransactionDate, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.TransactionDate, new { htmlAttributes = new { @class = "form-control", @type = "datetime-local", @Value = _date.ToString("yyyy-MM-ddTHH:mm") } })
+                        @Html.ValidationMessageFor(model => model.TransactionDate, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            }
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <fieldset class="form-group">
+                <div class="row">
+                    <label class="col-form-label col-sm-2 pt-0">Hareket Türü</label>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="IsCashIn" id="IsCashIn" value="true" required>
+                            <label class="form-check-label" for="IsCashIn">
+                                Cash In
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="IsCashIn" id="IsCashOut" value="false">
+                            <label class="form-check-label" for="IsCashOut">
+                                Cash Out
+                            </label>
+                        </div>
+                        @Html.ValidationMessageFor(model => model.IsCashIn, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="form-group">
+                <div class="row">
+                    <label class="col-form-label col-sm-2 pt-0">İşlem Durumu</label>
+                    <div class="col-sm-10">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="IsFree" id="IsFree" value="true" required>
+                            <label class="form-check-label" for="IsFree">
+                                Ücretsiz
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="IsFree" id="IsNotFree" value="false">
+                            <label class="form-check-label" for="IsNotFree">
+                                Ücretli
+                            </label>
+                        </div>
+                        @Html.ValidationMessageFor(model => model.IsFree, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.Explanation, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.TextAreaFor(model => model.Explanation, new { @class = "form-control", @rows = "6" })
+                    @Html.ValidationMessageFor(model => model.Explanation, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <hr />
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "CashFlow")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+<script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+
+        function expRequired() {
+            var id = $("#CashFlowTypeId").val();
+            $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("GetType", "CashFlow")' + "/" + id,
+                    dataType:'json',
+                    async: true,
+                    success: function (data) {
+                        console.log(data.message)
+                        if (data.message == "True") {
+                            $("#Explanation").prop('required', true);
+                        } else {
+                            $("#Explanation").prop('required', false);
+                        }
+                    },
+                    fail: function (data) {
+                        console.log("Hata");
+                    }
+                });
+        }
+</script>
+}

@@ -1,0 +1,215 @@
+﻿@model IEnumerable<QFinans.Areas.Api.Models.AccountTransactions>
+@using QFinans.Models
+@{
+    ViewBag.Title = "Coinbase";
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _crypto = db.Cryptocurrency.Where(x => x.IsDeleted == false).ToList();
+}
+
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Coinbase</h5>
+        <hr class="mt-2" />
+
+        @foreach (var item in _crypto)
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    @item.Name (@item.UnitSymbol)
+
+                    <a class="btn btn-xs btn-info float-right" href="@Url.Action("Details", "Coinbases", new { unitSymbol = item.UnitSymbol })" title="Detay"><i class="fas fa-search-plus"></i></a>
+
+                    <!-- Button trigger modal -->
+                    <button type="button" class="btn btn-xs btn-primary float-right mx-1" data-toggle="modal" data-target="#exampleModal" data-symbol="@item.UnitSymbol" data-id="@item.Id">₺</button>
+
+                </div>
+                <div class="card-body">
+
+                    <div class="row">
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                                <div class="p-3">
+                                    <div class="p-2 bg-primary text-white rounded shadow-sm text-center" style="width:60px">
+                                        <i class="fas fa-wallet fa-3x"></i>
+                                    </div>
+                                </div>
+                                <div class="p-2 flex-grow-1">
+                                    <div class="py-2">
+                                        <span class="d-block">Bakiye</span>
+                                        <span class="d-block font-weight-bolder h4" id="balance-@item.Id">
+                                            @((Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - (Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.PaymentCriytoAmount).DefaultIfEmpty(0).Sum()) - Model.Where(x => x.Deposit == false && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum()))
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                                <div class="p-3">
+                                    <div class="p-2 bg-success text-white rounded shadow-sm text-center" style="width:60px">
+                                        <i class="fas fa-coins fa-3x"></i>
+                                    </div>
+                                </div>
+                                <div class="p-2 flex-grow-1">
+                                    <div class="py-2">
+                                        <span class="d-block">Yatırım Tutarı</span>
+                                        <span class="d-block font-weight-bolder h4" id="deposit-@item.Id">@Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum()</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                                <div class="p-3">
+                                    <div class="p-2 bg-warning text-white rounded shadow-sm text-center" style="width:60px">
+                                        <i class="fas fa-percentage fa-3x"></i>
+                                    </div>
+                                </div>
+                                <div class="p-2 flex-grow-1">
+                                    <div class="py-2">
+                                        <span class="d-block">Komisyon Tutarı</span>
+                                        <span class="d-block font-weight-bolder h4" id="bank-charge-@item.Id">
+                                            @((Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - Model.Where(x => x.Deposit == true && x.UnitSymbol == item.UnitSymbol).Select(x => x.PaymentCriytoAmount).DefaultIfEmpty(0).Sum()))
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                            <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                                <div class="p-3">
+                                    <div class="p-2 bg-danger text-white rounded shadow-sm text-center" style="width:60px">
+                                        <i class="fas fa-coins fa-3x"></i>
+                                    </div>
+                                </div>
+                                <div class="p-2 flex-grow-1">
+                                    <div class="py-2">
+                                        <span class="d-block">Çekim Tutarı</span>
+                                        <span class="d-block font-weight-bolder h4" id="draw-@item.Id">@Model.Where(x => x.Deposit == false && x.UnitSymbol == item.UnitSymbol).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum()</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm mb-3">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm text-center" style="width:60px">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye</span>
+                            <span class="d-block font-weight-bolder h4" id="balance"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex bg-dark rounded border-dark shadow-sm mb-3">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm text-center" style="width:60px">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı</span>
+                            <span class="d-block font-weight-bolder h4" id="deposit"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex bg-dark rounded border-dark shadow-sm mb-3">
+                    <div class="p-3">
+                        <div class="p-2 bg-warning text-white rounded shadow-sm text-center" style="width:60px">
+                            <i class="fas fa-percentage fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı</span>
+                            <span class="d-block font-weight-bolder h4" id="bank-charge"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm text-center" style="width:60px">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı</span>
+                            <span class="d-block font-weight-bolder h4" id="draw"></span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        
+        $('#exampleModal').on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var _symbol = button.data('symbol'); // Extract info from data-* attributes
+            var _id = button.data('id');
+            var _url = "/Coinbases/Convert/" + _symbol;
+
+            var _balance = parseFloat($("#balance-" + _id).text().replace(",","."));
+            var _deposit = parseFloat($("#deposit-" + _id).text().replace(",", "."));
+            var _bankCharge = parseFloat($("#bank-charge-" + _id).text().replace(",", "."));
+            var _draw = parseFloat($("#draw-" + _id).text().replace(",", "."));
+
+            var modal = $(this);
+            modal.find('.modal-title').text(_symbol + "/TRY");
+
+            $.ajax({
+                type: 'GET',
+                url: _url,
+                success: function (data) {
+                    //console.log(data);
+                    var _exchangeValue = parseFloat(data.amount);
+
+                    modal.find('.modal-body #balance').text(_balance * _exchangeValue);
+                    modal.find('.modal-body #deposit').text(_deposit * _exchangeValue)
+                    modal.find('.modal-body #bank-charge').text(_bankCharge * _exchangeValue)
+                    modal.find('.modal-body #draw').text(_draw * _exchangeValue)
+
+                }
+            })
+            
+        })
+    </script>
+}

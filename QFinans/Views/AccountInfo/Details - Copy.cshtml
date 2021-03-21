@@ -1,0 +1,165 @@
+﻿@model QFinans.Areas.Api.Models.AccountInfo
+
+@{
+    ViewBag.Title = "Details";
+
+    DateTime date = DateTime.Now.Date;
+    DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
+    DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Name @Model.SurName <small class="text-muted">@Model.AccountNumber</small></h5>
+        <hr class="mt-2" />
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount)
+
+                                - Model.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount)
+
+                                - (Model.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount) * 3.4M / 100)).ToString("N0"))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@Model.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount).ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-file-invoice-dollar fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount) * 3.4M / 100).ToString("N0"))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@Model.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Sum(x => x.Amount).ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-tasks fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Onaylı Yatırım Sayısı</span>
+                            <span class="d-block font-weight-bolder h4">@Model.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Count().ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-tasks fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Onaylı Çekim Sayısı</span>
+                            <span class="d-block font-weight-bolder h4">@Model.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Count().ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="card-subtitle mb-2 mt-3 text-white-50">Hesaba ait onaylı talepler <span class="badge badge-secondary">@Model.AccountTransactions.Where(x => x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Count()</span></h6>
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Id</th>
+                    <th>Kullanıcı</th>
+                    <th>İsim</th>
+                    <th>Soyisim</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th>Tarih</th>
+                </tr>
+                @foreach (var item in Model.AccountTransactions.Where(x => x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).OrderByDescending(x => x.AddDate))
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.UserName</td>
+                        <td>@item.Name</td>
+                        <td>@item.SurName</td>
+                        <td class="text-right">@Html.DisplayFor(modelItem => item.Amount)</td>
+                        @if (item.Deposit == true)
+                        {
+                            <td><span class="badge badge-success">Yatırım</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-danger">Çekim</span></td>
+                        }
+                        <td>@Html.DisplayFor(modelItem => item.AddDate)</td>
+                    </tr>
+                }
+            </table>
+        </div>
+        <hr />
+        @if (Model.IsArchive == true)
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("ArchiveAccount", "AccountInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+        else
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "AccountInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+
+    </div>
+</div>

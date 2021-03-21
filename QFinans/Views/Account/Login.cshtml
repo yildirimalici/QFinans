@@ -1,0 +1,62 @@
+﻿@using QFinans.Models
+@model LoginViewModel
+@{
+    ViewBag.Title = "Log in";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - QFinans</title>
+    @Styles.Render("~/Content/css")
+    <link href="~/Content/login/login-slider.css" rel="stylesheet" />
+    @Scripts.Render("~/bundles/modernizr")
+
+</head>
+<body class="h-100">
+    <ul class="cb-slideshow list-unstyled">
+        <li><span>Image 01</span></li>
+        <li><span>Image 02</span></li>
+        <li><span>Image 03</span></li>
+        <li><span>Image 04</span></li>
+        <li><span>Image 05</span></li>
+        <li><span>Image 06</span></li>
+    </ul>
+    <section id="loginForm" class="container h-100">
+        <div class="row h-100 justify-content-center align-items-center">
+            <div class="card shadow-lg bg-dark text-white" style="min-width:320px">
+                <div class="card-body">
+                    <h5 class="card-title">QFinans</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Devam etmek için giriş yapın</h6>
+                    <div class="my-5"></div>
+                    @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "", role = "form" }))
+                    {
+                        @Html.AntiForgeryToken()
+
+                        @Html.ValidationSummary(true, "", new { @class = "text-white-50" })
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Email, new { @class = "" })
+                            @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Email, "", new { @class = "text-white-50" })
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(m => m.Password, new { @class = "" })
+                            @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-white-50" })
+                        </div>
+                        <button type="submit" class="btn btn-info btn-block mt-4"><i class="fas fa-sign-in-alt"></i> Giriş</button>
+                    }
+                    <div class="my-5"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/jqueryval")
+</body>
+</html>

@@ -1,0 +1,188 @@
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.AccountInfo>
+@using PagedList.Mvc;
+@{
+    ViewBag.Title = "ArchiveAccount";
+    DateTime date = DateTime.Now.Date;
+    DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
+    DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Arşivlenen Hesap Bilgileri</h5>
+        <hr />
+        @using (Html.BeginForm("ArchiveAccount", "AccountInfo", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-2">
+                <div class="col-md-12 ">
+                    <div class="d-flex">
+                        <select class="custom-select custom-select-sm" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="250">250</option>
+                        </select>
+                        <div class="flex-grow-1">
+                            <div class="input-group justify-content-end">
+                                @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control form-control-sm", @placeholder = "Arama yapmak için bir kelime yazın", @aria_describedby = "button-addon2" })
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-info" type="submit" id="button-addon2"><i class="fas fa-search"></i> Ara</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive mt-4">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>
+                        Id
+                    </th>
+                    <th>
+                        İsim
+                    </th>
+                    <th>
+                        Soyisim
+                    </th>
+                    <th>
+                        Hesap No
+                    </th>
+                    <th>
+                        İşlem Sayısı <span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım sayısı."><i class="fas fa-info-circle"></i></span>
+                    </th>
+                    <th>Toplam Yatırım</th>
+                    <th>Toplam Çekim</th>
+                    <th>Bakiye</th>
+                    <th>Durum</th>
+                    <th>Tutar Yönlendirme</th>
+                    <th>Cihaz</th>
+                    <th style="width:120px"></th>
+                </tr>
+
+                @foreach (var item in Model)
+                {
+                    <tr style="color: #@item.AccountInfoType.TextColor; background-color: #@item.AccountInfoType.BgColor">
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.SurName)
+                        </td>
+                        <td data-toggle="tooltip" data-placement="bottom" title="@item.AccountInfoType.Name">
+                            @Html.DisplayFor(modelItem => item.AccountNumber)
+                        </td>
+                        @* işlem sayısı *@
+                        <td>
+                            @String.Format("{0:N2}", item.TransactionCountDeposit)
+                        </td>
+                        @* toplam yatırım *@
+                        <td class="text-right">
+                            @String.Format("{0:N2}", item.ConfirmDepositSum)
+                        </td>
+                        @* toplam komisyon *@
+                        @*<td class="text-right">
+                                @(((item.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus != QFinans.Areas.Api.Models.TransactionStatus.Deny).Sum(x => x.Amount)) * 3.4M / 100).ToString("N2"))
+                            </td>*@
+                        @* toplam çekim *@
+                        <td class="text-right">
+                            @String.Format("{0:N2}", item.ConfirmDrawSum)
+                        </td>
+                        @* toplam bakiye *@
+                        <td class="text-right">
+                            @String.Format("{0:N2}", item.Balance)
+                        </td>
+                        @* durum *@
+                        @if (item.IsPassive == false)
+                        {
+                            <td><span class="badge badge-success">Aktif</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-secondary">Pasif</span></td>
+                        }
+                        <td class="text-right">@Html.DisplayFor(modelItem => item.AccountAmountRedirect.Name)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Device)</td>
+                        <td>
+                            <a class="btn btn-xs btn-info" href="@Url.Action("Details", "AccountInfo", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                            <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "AccountInfo", new { id = item.Id })" title="Düzenle"><i class="far fa-edit"></i></a>
+                            <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+
+            </table>
+        </div>
+
+        <hr />
+        <div class="row">
+            <div class="col-sm-2">
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-10">
+                @Html.PagedListPager(Model, page => Url.Action("ArchiveAccount", "AccountInfo", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+    </div>
+</div>
+
+@foreach (var item in Model)
+{
+    <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+
+                @using (Html.BeginForm("Delete", "AccountInfo", new { id = item.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert">
+                            Silmek istediğinizden emin misiniz?
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts{
+    <script>
+        setInterval(function () {
+            window.location.reload(1);
+        }, 600000);
+
+        $("#selectPageSize").val(@ViewBag.CustomPageSize);
+
+        function getPageSize() {
+            $("#formSearch").submit();
+        };
+    </script>
+}
+
+

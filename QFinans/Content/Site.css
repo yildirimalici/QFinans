@@ -1,0 +1,219 @@
+﻿body {
+    /*padding-top: 50px;
+    padding-bottom: 20px;*/
+    /*background-color: #F2F3F5 !important;*/
+    background-color: #2D2D2D !important;
+    color: #b8c7ce !important;
+    font-size: 14px;
+}
+
+/* Set padding to keep content from hitting the edges */
+.body-content {
+    margin-top: 80px !important;
+}
+
+.container-fluid {
+    max-width: 1600px !important;
+}
+
+.navbar {
+    /*background-color: #4a76a8 !important;*/
+    /*background-color: #0a213d !important;*/
+    min-height: 56px !important;
+    background-color: #1a2226 !important;
+}
+
+.dropdown-menu {
+    background-color: #1a2226 !important;
+    border: none;
+}
+
+.dropdown-item {
+    color: #fff !important;
+    font-size: 14px;
+}
+
+    .dropdown-item:hover {
+        background-color: #373737 !important;
+    }
+
+/* Set width on the form input elements since they're 100% wide by default */
+input,
+select,
+.select2-container--bootstrap4 .select2-selection, .select2-search, .select2-search input, .select2-results,
+textarea {
+    max-width: 480px;
+    background-color: #373737 !important;
+    color: #b8c7ce !important;
+    border-color: #454d55 !important;
+}
+
+
+.btn-xs {
+    padding: 0.20rem 0.4rem 0.25rem 0.4rem;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    border-radius: 0.2rem;
+}
+
+.bg-rfb {
+    background-color: #373737 !important;
+    color: #b8c7ce !important;
+}
+
+.text-rfb {
+    color: #b8c7ce !important;
+}
+
+.tarih {
+    width: 150px !important;
+}
+
+.islemler {
+    /*width: 136px;*/
+    width: 242px !important;
+}
+
+.dt-buttons {
+    margin-bottom: 1rem;
+    float: right;
+}
+
+.dataTables_info {
+    position: relative;
+    float: left;
+}
+
+.dataTables_paginate {
+    position: relative;
+    float: right;
+}
+
+    .dataTables_paginate ul {
+        margin: 0px !important;
+    }
+
+.text-lime {
+    /*color: rgb(255,255,0) !important;*/
+    color: lime !important;
+}
+
+.card, .modal-content {
+    background-color: #373737 !important;
+    color: #b8c7ce !important;
+}
+
+.footer {
+    background-color: #303030 !important;
+}
+
+.nav-tabs {
+    border-bottom: 1px solid #6c757d;
+}
+
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link.active {
+        color: #b8c7ce;
+        background-color: #373737;
+        border-color: #6c757d #6c757d #373737;
+    }
+
+    .nav-tabs .nav-item.show .nav-link, .nav-tabs .nav-link:hover {
+        border-top-color: #6c757d;
+        border-right-color: #6c757d;
+        border-bottom-color: transparent;
+        border-left-color: #6c757d;
+    }
+
+.nav-tabs .nav-link {
+    border: 1px solid transparent;
+    border-top-left-radius: .25rem;
+    border-top-right-radius: .25rem;
+}
+
+.page-item a {
+    background-color: #6c757d !important;
+    border: 1px solid #6c757d !important;
+    color: #b8c7ce !important;
+}
+
+    .page-item a:hover {
+        background-color: #17a2b8 !important;
+        border: 1px solid #17a2b8 !important;
+        color: #b8c7ce !important;
+    }
+
+.active > a {
+    background-color: #007bff !important;
+    border: 1px solid #007bff !important;
+    color: #b8c7ce !important;
+    cursor: default !important;
+}
+
+    .active > a:hover {
+        background-color: #007bff !important;
+        border: 1px solid #007bff !important;
+        color: #b8c7ce !important;
+    }
+
+hr {
+    border-color: #6c757d !important;
+}
+
+.modal-header, .modal-footer {
+    border-color: #6c757d !important;
+}
+
+.table-dark {
+    background-color: #373737 !important;
+    color: #CCDBE2 !important;
+}
+
+tr:hover {
+    background-color: indigo !important;
+    color: gainsboro !important;
+}
+
+.bg-new {
+    background-color: transparent;
+}
+
+.bg-confirm {
+    background-color: rgba(50,100,50, 1);
+}
+
+.bg-deny {
+    background-color: rgba(160,30,30, 1);
+}
+
+.bg-gold {
+    color: #856404;
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.bg-silver {
+    background-color: rgba(120,120,120, 1);
+}
+
+/*textarea:focus,
+select:focus,
+select2:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="datetime"]:focus,
+input[type="datetime-local"]:focus,
+input[type="date"]:focus,
+input[type="month"]:focus,
+input[type="time"]:focus,
+input[type="week"]:focus,
+input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="url"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="color"]:focus,
+.uneditable-input:focus {
+    border-color: rgba(126, 239, 104, 0.8);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.075) inset, 0 0 8px rgba(126, 239, 104, 0.6);
+    outline: 0 none;
+}*/

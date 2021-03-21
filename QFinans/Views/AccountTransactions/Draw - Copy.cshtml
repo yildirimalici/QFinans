@@ -1,0 +1,249 @@
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.AccountTransactions>
+@using PagedList.Mvc;
+@using QFinans.Models;
+
+@{
+    ViewBag.Title = "Çekim";
+    ApplicationDbContext db = new ApplicationDbContext();
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Çekim Talepleri</h5>
+        <hr />
+
+        @using (Html.BeginForm("Draw", "AccountTransactions", FormMethod.Post, new { @id = "formSearch" }))
+        {
+            <div class="row mb-2">
+                <div class="col-md-12 ">
+                    <div class="d-flex">
+                        <select class="custom-select custom-select-sm" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="250">250</option>
+                        </select>
+                        <div class="flex-grow-1">
+                            <div class="input-group justify-content-end">
+                                @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control form-control-sm", @placeholder = "Arama yapmak için bir kelime yazın", @aria_describedby = "button-addon2" })
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-info" type="submit" id="button-addon2"><i class="fas fa-search"></i> Ara</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="tabelDraw">
+                <tr>
+                    <th>
+                        Id
+                    </th>
+                    <th>
+                        Kullanıcı
+                    </th>
+                    <th>
+                        İsim
+                    </th>
+                    <th>
+                        Soyisim
+                    </th>
+                    <th>
+                        Tutar
+                    </th>
+                    <th>
+                        Durum
+                    </th>
+                    <th>
+                        Müşteri Hesap No
+                    </th>
+                    <th class="tarih">
+                        Tarih
+                    </th>
+                    <th>Açıklama</th>
+                    <th style="min-width: 110px !important"></th>
+                </tr>
+
+                @foreach (var item in Model)
+                {
+                    <tr class="@(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm ? "bg-confirm": "") @(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Deny ? "bg-deny": "") @(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New ? "bg-new": "")" id="transaction-@item.Id">
+                        <td id="id-@item.Id">
+                            @Html.DisplayFor(modelItem => item.Id)
+                        </td>
+                        <td id="userName-@item.Id">
+                            @if (db.BlackList.Where(x => x.IsDeleted == false).Any(x => x.UserName == item.UserName) == true)
+                            {
+                                <i class="fas fa-user-secret text-white"></i>
+                            }
+                            @Html.DisplayFor(modelItem => item.UserName)
+                        </td>
+                        <td id="name-@item.Id">
+                            @Html.DisplayFor(modelItem => item.Name)
+                        </td>
+                        <td id="surName-@item.Id">
+                            @Html.DisplayFor(modelItem => item.SurName)
+                        </td>
+                        <td class="text-right" id="amount-@item.Id">
+                            @if (item.Amount == item.OldAmount)
+                            {
+                                @Html.DisplayFor(modelItem => item.Amount)
+                            }
+                            else
+                            {
+                                <span class="badge badge-success"> @Html.DisplayFor(modelItem => item.Amount)</span>
+                                <span class="badge badge-danger"> @Html.DisplayFor(modelItem => item.OldAmount)</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm)
+                            {
+                                if (item.Amount == item.OldAmount)
+                                {
+                                    <span class="badge badge-success" id="status-@item.Id" title="Confirm">Onay</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warning text-wrap" id="status-@item.Id" title="Confirm">Onay (Düzenlendi)</span>
+                                }
+                            }
+                            @if (item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Deny)
+                            {
+                                <span class="badge badge-danger" id="status-@item.Id" title="Deny">Red</span>
+                            }
+                            @if (item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+                            {
+                                <span class="badge badge-info" id="status-@item.Id" title="New">Yeni</span>
+                            }
+                        </td>
+                        <td id="accountNumber-@item.Id">
+                            @Html.DisplayFor(modelItem => item.CustomerAccountNumber)
+                        </td>
+                        <td class="text-center">
+                            <span class="d-block">@Html.DisplayFor(modelItem => item.AddDate)</span>
+                            <span class="d-block">@Html.DisplayFor(modelItem => item.ResponseDate)</span>
+                        </td>
+                        <td id="note-@item.Id">
+                            @Html.DisplayFor(modelItem => item.Note)
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-xs btn-success btn-block mb-1" data-toggle="modal" data-target="#modelConfirm-@item.Id"><i class="fas fa-check-circle"></i> Onayla</button>
+                            <div class="modal fade" id="modelConfirm-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <form action="/AccountTransactions/ConfirmDraw/@item.Id" method="post" id="formConfirm-@item.Id">
+                                            @Html.AntiForgeryToken()
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Onayla</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p><b>Çekim Tutarı: </b>@Html.DisplayFor(modelItem => item.Amount)</p>
+                                                @if (item.AccountInfoId != null)
+                                                {
+                                                    <p class="text-muted">Seçili olan hesap: @item.AccountInfo.Name @item.AccountInfo.SurName (@item.AccountInfo.AccountNumber)</p>
+                                                }
+                                                <div class="form-group">
+                                                    @Html.LabelFor(modelItem => item.AccountInfoId, null, htmlAttributes: new { @class = "control-label" })
+                                                    @Html.DropDownList("AccountInfoId", null, "Seçiniz", htmlAttributes: new { @class = "form-control form-control-sm select2", @id = "", @required = "required" })
+                                                    @Html.ValidationMessageFor(modelItem => item.AccountInfoId, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                                <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check-circle"></i> Onayla</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-xs btn-danger btn-block mb-1" data-toggle="modal" data-target="#exampleModal-@item.Id"><i class="fas fa-times-circle"></i> Reddet</button>
+                            <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content" id="modalContent-@item.Id">
+                                        <form action="/AccountTransactions/Deny/@item.Id" method="post" id="formDeny-@item.Id">
+                                            @Html.AntiForgeryToken()
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reddet</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <select class="form-control form-control-sm mb-3" id="selectDeny-@item.Id" onclick="setReason(@item.Id)">
+                                                    <option value="">Seçiniz</option>
+                                                    <option value="Aylık Limit Aşımı">Aylık Limit Aşımı</option>
+                                                    <option value="Yanlış Papara Numarası">Yanlış Papara Numarası</option>
+                                                    <option value="İsim Uyuşmazlığı">İsim Uyuşmazlığı</option>
+                                                    <option value="">Diğer</option>
+                                                </select>
+                                                <div class="form-group">
+                                                    <label class="control-label" for="validationTextarea">Red Gerekçesi</label>
+                                                    <textarea class="form-control form-control-sm" id="validationTextarea-@item.Id" name="aciklama" placeholder="Açıklama gereklidir." rows="6" required>@item.Note</textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-times-circle"></i> Reddet</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            <a class="btn btn-xs btn-warning btn-block" href="@Url.Action("Edit", "AccountTransactions", new { id = item.Id })"><i class="far fa-edit"></i> Düzenle</a>
+                        </td>
+                    </tr>
+                }
+
+            </table>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-sm-2">
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-10">
+                @Html.PagedListPager(Model, page => Url.Action("Draw", "AccountTransactions", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        setInterval(function () {
+            window.location.reload(1);
+        }, 120000);
+
+        $("#selectPageSize").val(@ViewBag.CustomPageSize);
+        function getPageSize() {
+            $("#formSearch").submit();
+        };
+
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+
+        function setReason(id) {
+            _reason = $("#selectDeny-" + id).val();
+            $("#validationTextarea-" + id).val(_reason);
+            //alert(_reason)
+        }
+    </script>
+}

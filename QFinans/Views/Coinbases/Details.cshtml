@@ -1,0 +1,215 @@
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.AccountTransactions>
+@using PagedList.Mvc
+@using QFinans.Models
+@{
+    ViewBag.Title = "Details";
+    string _unitSymbol = ViewBag.UnitSymbol;
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _crypto = db.Cryptocurrency.Where(x => x.IsDeleted == false && x.UnitSymbol == _unitSymbol).FirstOrDefault();
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@_crypto.Name (@_crypto.UnitSymbol)</h5>
+        <hr class="mt-2" />
+
+        @*<div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye (₺)</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()) - Model.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum()).ToString("N2"))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı (₺)</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum())</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-file-invoice fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı (₺)</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum() - (decimal)Model.Where(x => x.Deposit == true).Select(x => x.PaymentLocalAmount).DefaultIfEmpty(0).Sum()).ToString("N2"))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı (₺)</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum())</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>*@
+
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye (@_crypto.UnitSymbol)</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - (Model.Where(x => x.Deposit == true).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - Model.Where(x => x.Deposit == true).Select(x => x.PaymentCriytoAmount).DefaultIfEmpty(0).Sum()) - Model.Where(x => x.Deposit == false).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum()))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı (@_crypto.UnitSymbol)</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == true).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum())</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-warning text-white rounded shadow-sm">
+                            <i class="fas fa-percentage fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı (@_crypto.UnitSymbol)</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @((Model.Where(x => x.Deposit == true).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum() - Model.Where(x => x.Deposit == true).Select(x => x.PaymentCriytoAmount).DefaultIfEmpty(0).Sum()))
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı (@_crypto.UnitSymbol)</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N2}", Model.Where(x => x.Deposit == false).Select(x => x.ExchangeValue).DefaultIfEmpty(0).Sum())</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <h6 class="card-subtitle mb-2 mt-3 text-white-50">İşlemler</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Id</th>
+                    <th>Kullanıcı</th>
+                    <th>İsim</th>
+                    <th>Soyisim</th>
+                    <th>Tutar</th>
+                    <th>Kripto Tutarı</th>
+                    <th>İşlem Türü</th>
+                    <th>Tarih</th>
+                </tr>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.UserName</td>
+                        <td>@item.Name</td>
+                        <td>@item.SurName</td>
+                        <td class="text-right">@item.Amount ₺</td>
+                        <td class="text-right">@item.ExchangeValue @item.UnitSymbol</td>
+                        <td>
+                            @if (item.Deposit)
+                            {
+                                <span class="badge badge-success">Yatırım</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Çekim</span>
+                            }
+                        </td>
+                        <td>@item.AddDate</td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <hr />
+        <div class="row">
+            <div class="col-sm-4">
+                <a class="btn btn-sm btn-info mr-2" href="@Url.Action("Index", "Coinbases")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-8">
+                @Html.PagedListPager(Model, page => Url.Action("Index", "Coinbases", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+
+    </div>
+</div>
+

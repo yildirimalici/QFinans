@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNet.Identity
+@using QFinans.Models
+@if (Request.IsAuthenticated)
+{
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _user = db.Users.Find(User.Identity.GetUserId());
+    using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "ml-auto" }))
+    {
+    @Html.AntiForgeryToken()
+
+    <ul class="nav navbar-nav navbar-right">
+        <li>
+            @Html.ActionLink("Kullanıcı", "Index", "Manage", routeValues: null, htmlAttributes: new { title = "Manage", @class = "btn btn-xs btn-secondary mr-1" })
+        </li>
+        <li><a href="javascript:document.getElementById('logoutForm').submit()" class="btn btn-xs btn-danger">Çıkış</a></li>
+    </ul>
+    }
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}

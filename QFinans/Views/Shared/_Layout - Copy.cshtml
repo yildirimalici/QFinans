@@ -1,0 +1,266 @@
+﻿@using QFinans.Models;
+@using Microsoft.AspNet.Identity
+@{
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _user = db.Users.Find(User.Identity.GetUserId());
+    DateTime startDate = DateTime.Now.Date;
+    DateTime endDate = DateTime.Now.AddDays(1).Date;
+    var newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+    var newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+    var availableAccount = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsPassive == false).Count();
+
+}
+<!DOCTYPE html>
+<html class="h-100">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.Title - QFinans</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+
+</head>
+<body class="d-flex flex-column h-100">
+
+
+
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            @Html.ActionLink("QFinans", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Index", "Home")"><i class="fas fa-chart-bar"></i> Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Index", "AccountInfo")">
+                            <i class="fas fa-wallet"></i> Hesap Bilgileri <span class="badge badge-light" id="navbarActiveAccountCount">@availableAccount</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Deposit", "AccountTransactions")">
+                            <i class="fas fa-arrow-circle-down"></i> Yatırım <span class="badge badge-light" id="navbarNewDepositCount">@newDepositCount</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="@Url.Action("Draw", "AccountTransactions")">
+                            <i class="fas fa-arrow-circle-up"></i> Çekim <span class="badge badge-light" id="navbarNewDrawCount">@newDrawCount</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="fas fa-chart-pie"></i> Raporlar</a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                            <a class="dropdown-item" href="@Url.Action("DailyTransactionReport", "Reports")">Günlük İşlem Raporu</a>
+                        </div>
+                    </li>
+                </ul>
+                @Html.Partial("_LoginPartial")
+            </div>
+        </div>
+    </nav>
+
+    <div class="container body-content my-4">
+
+        @if (TempData["info"] != null)
+        {
+            <div class="alert alert-info alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["info"]
+            </div>
+        }
+
+        @if (TempData["success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["success"]
+            </div>
+        }
+
+        @if (TempData["warning"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["warning"]
+            </div>
+        }
+
+        @if (TempData["error"] != null)
+        {
+            <div class="alert alert-warning alert-dismissible fade show">
+                <button type="button" class="close p-2" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                @TempData["error"]
+            </div>
+        }
+
+        @Html.Hidden("GetTrans", Url.Action("GetNotificationAccountTransactions", "Home"))
+        @Html.Hidden("GetNav", Url.Action("GetDashboardJsonData", "Home"))
+        @Html.Hidden("GetHide", Url.Action("NotificationHideAllData", "Home"))
+
+        @RenderBody()
+    </div>
+
+    <div class="mt-auto bg-light">
+        <hr class="mt-0" />
+        <div class="container">
+            <div class="d-flex justify-content-between bd-highlight">
+                <footer>
+                    <p>&copy; @DateTime.Now.Year - QFinans</p>
+                </footer>
+                <span>version 1.2</span>
+            </div>
+        </div>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="~/Scripts/jquery.signalR-2.4.1.min.js"></script>
+    <script src="~/signalr/hubs" type="text/javascript"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            //proxy created on the fly
+            var notificationHub = $.connection.notificationHub;
+            // Declare a function on the job hub so the server can invoke it
+            notificationHub.client.displayNotify = function () {
+                getData();
+                getNavData();
+                getDashboardData();
+                getHideNotification();
+            };
+            // Start the connection
+            $.connection.hub.start().done(function () {
+                getData();
+                getNavData();
+                getDashboardData();
+                getHideNotification();
+                getHideNotification();
+            });
+        });
+
+        //setInterval(function () {
+        //    getNavData();
+        //    getDashboardData();
+        //    getHideNotification();
+        //}, 1500);
+
+        function formatCurrency(price) {
+
+            var currency_symbol = "₺"
+
+            var formattedOutput = new Intl.NumberFormat('tr-TR', {
+                style: 'currency',
+                currency: 'TRY',
+                minimumFractionDigits: 0,
+            });
+
+            return formattedOutput.format(price).replace(currency_symbol, '')
+        };
+
+        var options = {
+            classname: "toast",
+            transition: "slideLeftFade",
+            insertBefore: true,
+            duration: 4000,
+            enableSounds: true,
+            autoClose: true,
+            progressBar: true,
+            sounds: {
+                info: "@Url.Content("~/Content/toasty/sounds/info/1.mp3")",
+                success: "@Url.Content("~/Content/toasty/sounds/success/1.mp3")",
+                warning: "@Url.Content("~/Content/toasty/sounds/warning/1.mp3")",
+                error: "@Url.Content("~/Content/toasty/sounds/error/1.mp3")",
+            },
+
+            // callback:
+            // onShow function will be fired when a toast message appears.
+            onShow: function (type) { },
+
+            // callback:
+            // onHide function will be fired when a toast message disappears.
+            onHide: function (type) { },
+
+            // the placement where prepend the toast container:
+            prependTo: document.body.childNodes[0]
+        };
+
+        // using the main Toasty function:
+        var customToast = new Toasty(options);
+        // or this public method:
+        //customToast.configure(options);
+
+        function getData() {
+            $.ajax({
+                url: $("#GetTrans").val(),
+                type: 'GET',
+                datatype: 'json',
+                success: function (data) {
+                    $.each(data.listData, function (i, model) {
+                        if (model.deposit == true) {
+                            var msg = "id: " + model.id + " " + model.username + " kullanıcısının <b>" + formatCurrency(model.amount) + "</b> tutarında yatırım talebi var.";
+                            customToast.success(msg);
+                        } else {
+                            var msg = "id: " + model.id + " " + model.username + " kullanıcısının <b>" + formatCurrency(model.amount) + "</b> tutarında çekim talebi var.";
+                            customToast.error(msg);
+                        };
+                    });
+                }
+            });
+        };
+
+        function getNavData() {
+            $.ajax({
+                url: $("#GetNav").val(),
+                type: 'GET',
+                datatype: 'json',
+                success: function (data) {
+                    $("#navbarActiveAccountCount").html(formatCurrency(data.ActiveAccountCount));
+                    $("#navbarNewDepositCount").html(formatCurrency(data.NewDepositCount));
+                    $("#navbarNewDrawCount").html(formatCurrency(data.NewDrawCount));
+                }
+            });
+        };
+
+        function getDashboardData() {
+            $.ajax({
+                url: $("#GetDash").val(),
+                type: 'GET',
+                datatype: 'json',
+                success: function (data) {
+                    $("#newDepositCount").html(formatCurrency(data.NewDepositCount));
+                    $("#newDepositSum").html(formatCurrency(data.NewDepositSum));
+                    $("#newDrawCount").html(formatCurrency(data.NewDrawCount));
+                    $("#newDrawSum").html(formatCurrency(data.NewDrawSum));
+                    $("#confirmDepositCount").html(formatCurrency(data.ConfirmDepositCount));
+                    $("#confirmDepositSum").html(formatCurrency(data.ConfirmDepositSum));
+                    $("#confirmDrawCount").html(formatCurrency(data.ConfirmDrawCount));
+                    $("#confirmDrawSum").html(formatCurrency(data.ConfirmDrawSum));
+                    $("#currentDate").html(data.CurrentDate);
+                },
+                fail: function () {
+                    alert("hata");
+                }
+            });
+        };
+
+        function getHideNotification() {
+            $.ajax({
+                url: $("#GetHide").val(),
+                type: 'GET',
+                datatype: 'json'
+            });
+        };
+    </script>
+    @RenderSection("scripts", required: false)
+</body>
+</html>

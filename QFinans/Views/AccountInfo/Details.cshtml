@@ -1,0 +1,286 @@
+﻿@model QFinans.Areas.Api.Models.AccountInfo
+@using QFinans.Models
+@{
+    ViewBag.Title = "Details";
+
+    DateTime date = DateTime.Now.Date;
+    DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
+    DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+
+    ApplicationDbContext db = new ApplicationDbContext();
+
+    var _deposits = db.AccountTransactions.Where(x => x.AccountInfoId == Model.Id && x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && (x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New || x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm)).OrderBy(x => x.AddDate).ToList();
+    var _users = _deposits.GroupBy(x => x.UserName).Select(g => new { name = g.Key, count = g.Count(), date = g.Select(x => x.AddDate).Min() }).OrderBy(x => x.date).ToList();
+
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">@Model.Name @Model.SurName <small class="text-muted">@Model.AccountNumber</small></h5>
+        <hr class="mt-2" />
+        <div class="row">
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-primary text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Bakiye</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @String.Format("{0:N2}", Model.Balance)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Yatırım Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N0}", (Model.ConfirmDepositSum + Model.CashInSum))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-file-invoice-dollar fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Komisyon Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">
+                                @String.Format("{0:N0}", Model.BankCharge)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Çekim Tutarı</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N0}", (Model.ConfirmDrawSum + Model.DrawSplitSum + Model.CashOutSum))</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-tasks fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Onaylı Yatırım Sayısı</span>
+                            <span class="d-block font-weight-bolder h4">@ViewBag.DepositConfirmCount.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-tasks fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Onaylı Çekim Sayısı</span>
+                            <span class="d-block font-weight-bolder h4">@ViewBag.DrawConfirmCount.ToString("N0")</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-success text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Cash In</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N0}", Model.CashInSum)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-6 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark shadow-sm">
+                    <div class="p-3">
+                        <div class="p-2 bg-danger text-white rounded shadow-sm">
+                            <i class="fas fa-coins fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Cash Out</span>
+                            <span class="d-block font-weight-bolder h4">@String.Format("{0:N0}", Model.CashOutSum)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <h6 class="card-subtitle mb-2 mt-3 text-white-50">Hesaba ait hareketler <span class="badge badge-secondary">@ViewBag.CashFlowCount.ToString("N0")</span></h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Id</th>
+                    <th>İşlem Tarihi</th>
+                    <th>Tutar</th>
+                    <th>İşlem Türü</th>
+                    <th>Ücretli/Ücretsiz</th>
+                    <th>Durum</th>
+                </tr>
+                @foreach (var item in ViewBag.CashFlow)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.TransactionDate.ToString("dd.MM.yyyy")</td>
+                        <td class="text-right">@String.Format("{0:N0}", item.Amount)</td>
+
+                        @if (item.CashFlowTypeId != null)
+                        {
+                            <td>@item.CashFlowType.Name</td>
+                        }
+                        else
+                        {
+                            <td></td>
+                        }
+
+                        @if (item.IsFree == true)
+
+                        {
+                            <td><span class="badge badge-success">Ücretsiz</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-danger">Ücretli</span></td>
+                        }
+
+                        @if (item.IsCashIn == true)
+                        {
+                            <td><span class="badge badge-success">Cash In</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-danger">Cash Out</span></td>
+                        }
+
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <h6 class="card-subtitle mb-2 mt-3 text-white-50">Hesaba ait onaylı talepler <span class="badge badge-secondary">@ViewBag.AccountTransactionsCount.ToString("N0")</span> <small>Bu ay yatırım yapan farklı kullanıcı sayısı: @Model.DifferentUsersTransactionCountDeposit</small> </h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                <tr>
+                    <th>Id</th>
+                    <th>Kullanıcı</th>
+                    <th>İsim</th>
+                    <th>Soyisim</th>
+                    <th>Tutar</th>
+                    <th>Ücretli/Ücretsiz</th>
+                    <th>Durum</th>
+                    <th>Tarih</th>
+                </tr>
+                @foreach (var item in ViewBag.AccountTransactions)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.UserName</td>
+                        <td>@item.Name</td>
+                        <td>@item.SurName</td>
+                        @{ 
+                            int _id = Convert.ToInt32(item.Id);
+                        }
+                        @if(db.DrawSplit.Any(x => x.IsDeleted == false && x.AccountInfoId == Model.Id && x.AccountTransactionsId == _id))
+                        {
+                            <td class="text-right">@String.Format("{0:N0}", db.DrawSplit.Where(x => x.IsDeleted == false && x.AccountInfoId == Model.Id && x.AccountTransactionsId == _id).Select(x => x.Amount).DefaultIfEmpty(0).Sum())</td>
+                        }
+                        else
+                        {
+                            <td class="text-right">@String.Format("{0:N0}", item.Amount)</td>
+                        }
+
+                        @if (item.Deposit == true)
+                        {
+                            if (item.IsFree == true)
+                            {
+                                <td><span class="badge badge-success">Ücretsiz</span></td>
+                            }
+                            else
+                            {
+                                <td><span class="badge badge-danger">Ücretli</span></td>
+                            }
+                        }
+                        else
+                        {
+                            if(db.DrawSplit.Any(x => x.IsDeleted == false && x.AccountInfoId == Model.Id && x.AccountTransactionsId == _id))
+                            {
+                                <td><span class="badge badge-warning">Böl ve Öde</span></td>
+                            }
+                            else
+                            {
+                                <td><span class="badge badge-secondary">Çekim</span></td>
+                            }
+                        }
+                        @if (item.Deposit == true)
+                        {
+                            <td><span class="badge badge-success">Yatırım</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-danger">Çekim</span></td>
+                        }
+                        <td>@item.AddDate</td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <hr />
+        @if (Model.IsArchive == true)
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("ArchiveAccount", "AccountInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+        else
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "AccountInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+
+    </div>
+</div>

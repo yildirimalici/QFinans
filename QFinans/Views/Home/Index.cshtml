@@ -1,0 +1,298 @@
+﻿@model IEnumerable<QFinans.Areas.Api.Models.AccountTransactions>
+@using Microsoft.AspNet.Identity
+@using QFinans.Models
+@{
+    ViewBag.Title = "Dashboard";
+    ApplicationDbContext db = new ApplicationDbContext();
+    DateTime firstTransDate = db.AccountTransactions.OrderBy(x => x.AddDate).Select(x => (DateTime?)x.AddDate).FirstOrDefault() ?? DateTime.Now;
+    DateTime? startDate = db.SystemParameters.Select(x => (x.BalanceStartDate == null ? firstTransDate : x.BalanceStartDate)).FirstOrDefault();
+    var _currentUser = db.Users.Find(User.Identity.GetUserId());
+}
+
+<h5 class="card-title">Dashboard <small class="text-muted" id="currentDate">@ViewBag.StartDate</small></h5>
+
+<div class="row">
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="bg-info text-white rounded">
+            <div class="d-flex">
+                <div class="p-4">
+                    <i class="fas fa-arrow-circle-down fa-3x"></i>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Yeni Yatırım Talebi</span>
+                        <span class="d-block font-weight-bolder h4" id="newDepositCount">@ViewBag.NewDepositCount</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="bg-info text-white rounded">
+            <div class="d-flex">
+                <div class="p-4">
+                    <i class="fas fa-arrow-circle-down fa-3x"></i>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Yeni Yatırım Tutarı</span>
+                        <span class="d-block font-weight-bolder h4" id="newDepositSum">@ViewBag.NewDepositSum.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="bg-danger text-white rounded">
+            <div class="d-flex">
+                <div class="p-4">
+                    <i class="fas fa-arrow-circle-up fa-3x"></i>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Yeni Çekim Talebi</span>
+                        <span class="d-block font-weight-bolder h4" id="newDrawCount">@ViewBag.NewDrawCount</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="bg-danger text-white rounded">
+            <div class="d-flex">
+                <div class="p-4">
+                    <i class="fas fa-arrow-circle-up fa-3x"></i>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Yeni Çekim Tutarı</span>
+                        <span class="d-block font-weight-bolder h4" id="newDrawSum">@ViewBag.NewDrawSum.ToString("N0")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="row">
+    @*<div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="d-flex bg-dark rounded border-dark">
+                <div class="p-3">
+                    <div class="p-2 bg-success text-white rounded shadow-sm">
+                        <i class="fas fa-tasks fa-3x"></i>
+                    </div>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Onaylı Yatırım Sayısı</span>
+                        <span class="d-block font-weight-bolder h4" id="confirmDepositCount">@ViewBag.ConfirmDepositCount</span>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="d-flex bg-dark rounded border-dark">
+            <div class="p-3">
+                <div class="p-2 bg-success text-white rounded shadow-sm">
+                    <i class="fas fa-coins fa-3x"></i>
+                </div>
+            </div>
+            <div class="p-2 flex-grow-1">
+                <div class="py-2">
+                    <span class="d-block">Onaylı Yatırım Tutarı</span>
+                    <span class="d-block font-weight-bolder h4" id="confirmDepositSum">@ViewBag.ConfirmDepositSum.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @*<div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+            <div class="d-flex bg-dark rounded border-dark">
+                <div class="p-3">
+                    <div class="p-2 bg-danger text-white rounded shadow-sm">
+                        <i class="fas fa-tasks fa-3x"></i>
+                    </div>
+                </div>
+                <div class="p-2 flex-grow-1">
+                    <div class="py-2">
+                        <span class="d-block">Onaylı Çekim Sayısı</span>
+                        <span class="d-block font-weight-bolder h4" id="confirmDrawCount">@ViewBag.ConfirmDrawCount</span>
+                    </div>
+                </div>
+            </div>
+        </div>*@
+
+    <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+        <div class="d-flex bg-dark rounded border-dark">
+            <div class="p-3">
+                <div class="p-2 bg-danger text-white rounded shadow-sm">
+                    <i class="fas fa-coins fa-3x"></i>
+                </div>
+            </div>
+            <div class="p-2 flex-grow-1">
+                <div class="py-2">
+                    <span class="d-block">Onaylı Çekim Tutarı</span>
+                    <span class="d-block font-weight-bolder h4" id="confirmDrawSum">@ViewBag.ConfirmDrawSum.ToString("N0")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Request.IsAuthenticated)
+    {
+        if (_currentUser.IsAdmin == true)
+        {
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark">
+                    <div class="p-3">
+                        <div class="p-2 bg-transparent text-white rounded shadow-sm">
+                            <i class="fas fa-wallet fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Firma Bakiyesi</span>
+                            <span class="d-block font-weight-bolder h4" id="balance"><span class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+
+    @if (Request.IsAuthenticated)
+    {
+        if (_currentUser.IsAdmin == true)
+        {
+            <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                <div class="d-flex bg-dark rounded border-dark">
+                    <div class="p-3">
+                        <div class="p-2 bg-transparent text-white rounded shadow-sm">
+                            <i class="fas fa-landmark fa-3x"></i>
+                        </div>
+                    </div>
+                    <div class="p-2 flex-grow-1">
+                        <div class="py-2">
+                            <span class="d-block">Toplam Kasa</span>
+                            <span class="d-block font-weight-bolder h4" id="safe"><span class="spinner-border spinner-border-sm" role="status"><span class="sr-only">Loading...</span></span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @*<div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="d-flex bg-dark rounded border-dark">
+                        <div class="p-3">
+                            <div class="p-2 bg-transparent text-white rounded shadow-sm">
+                                <i class="fas fa-coins fa-3x"></i>
+                            </div>
+                        </div>
+                        <div class="p-2 flex-grow-1">
+                            <div class="py-2">
+                                <span class="d-block">Ücretsiz Cash In Tutarı</span>
+                                <span class="d-block font-weight-bolder h4" id="cashInFreeSum">@ViewBag.CashInFreeSum.ToString("N0")</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
+                    <div class="d-flex bg-dark rounded border-dark">
+                        <div class="p-3">
+                            <div class="p-2 bg-transparent text-white rounded shadow-sm">
+                                <i class="fas fa-coins fa-3x"></i>
+                            </div>
+                        </div>
+                        <div class="p-2 flex-grow-1">
+                            <div class="py-2">
+                                <span class="d-block">Ücretsiz Toplam Tutar</span>
+                                <span class="d-block font-weight-bolder h4" id="totalFreeSum">@((ViewBag.DepositFreeSum + ViewBag.CashInFreeSum).ToString("N0"))</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>*@
+        }
+    }
+
+</div>
+
+@if (Request.IsAuthenticated)
+{
+    if (User.Identity.GetUserName() != "user_api@qfinans.com" || User.Identity.GetUserName() != "nano@qfinans.com")
+    {
+        <h6 class="card-title">Aktif Hesaplar</h6>
+
+        foreach (var item in ViewBag.ActiveAccountInfo)
+        {
+            <div class="card mb-3" style="color: #@item.AccountInfoType.TextColor !important; background-color: #@item.AccountInfoType.BgColor !important">
+                <div class="card-body pt-2 pb-1">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h4>@item.Id - @item.Name @item.SurName (@(item.TransactionCountDeposit == null ? 0 : item.TransactionCountDeposit))  (@(item.AccountAmountRedirectId == null ? "" : item.AccountAmountRedirect.Name))</h4>
+                        </div>
+                        <div class="col-md-4">
+                            <h4 class="text-right font-weight-bold">@((item.Balance == null ? 0 : item.Balance).ToString("N0"))</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+
+@Html.Hidden("GetDash", Url.Action("GetDashboardJsonData", "Home"))
+
+@section scripts{
+    <script>
+        function getDashboardData0() {
+            $.getJSON('/Home/GetDashboardJsonData', function (data) {
+                //İşlemler...
+                $("#newDepositCount").html(formatCurrency(data.NewDepositCount));
+                $("#newDepositSum").html(formatCurrency(data.NewDepositSum));
+                $("#newDrawCount").html(formatCurrency(data.NewDrawCount));
+                $("#newDrawSum").html(formatCurrency(data.NewDrawSum));
+                $("#confirmDepositCount").html(formatCurrency(data.ConfirmDepositCount));
+                $("#confirmDepositSum").html(formatCurrency(data.ConfirmDepositSum));
+                $("#confirmDrawCount").html(formatCurrency(data.ConfirmDrawCount));
+                $("#confirmDrawSum").html(formatCurrency(data.ConfirmDrawSum));
+                $("#currentDate").html(data.CurrentDate);
+            });
+        };
+
+        setInterval(function () {
+            getDashboardData0();
+        }, 15000);
+    </script>
+
+    @if (Request.IsAuthenticated)
+    {
+        if (_currentUser.IsAdmin == true || User.Identity.GetUserName() == "nano@qfinans.com")
+        {
+            <script>
+
+                function getBalanceData() {
+                    $.getJSON('/Home/GetBalanceJsonData', function (data) {
+                        var deposit = data.ConfirmDepositSum;
+                        var bankCharge = deposit * data.BankCharge / 100;
+                        var draw = data.ConfirmDrawSum;
+                        var balance = data.InitialBalance + deposit - bankCharge - draw + data.BalanceEditAmount;
+                        $("#balance").html(formatCurrency(balance.toFixed(0)));
+                        $("#safe").html(formatCurrency(data.Safe.toFixed(0)));
+                    });
+                };
+
+                getBalanceData();
+
+                setInterval(function () {
+                    getBalanceData();
+                }, 15000);
+            </script>
+        }
+    }
+}

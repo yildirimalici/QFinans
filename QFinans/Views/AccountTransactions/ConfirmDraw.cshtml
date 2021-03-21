@@ -1,0 +1,480 @@
+﻿@model QFinans.Areas.Api.Models.AccountTransactions
+@using QFinans.Repostroies;
+@using QFinans.Models
+
+@{
+    ViewBag.Title = "Çekim Onayla";
+    CustomFunctions _qr = new CustomFunctions();
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _coinsType = db.Cryptocurrency.Where(x => x.IsDeleted == false).ToList();
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Çekim Onayla</h5>
+        <hr />
+
+        <form action="/AccountTransactions/ConfirmDraw/@Model.Id" method="post" id="formConfirm">
+            @Html.AntiForgeryToken()
+
+            <div class="row">
+                <div class="col-md-8">
+
+                    <dl class="row">
+                        <dt class="col-md-3">@Html.DisplayNameFor(model => model.Id)</dt>
+                        <dd class="col-md-9">@Html.DisplayFor(model => model.Id)</dd>
+
+                        <dt class="col-md-3">@Html.DisplayNameFor(model => model.UserName)</dt>
+                        <dd class="col-md-9">@Html.DisplayFor(model => model.UserName)</dd>
+
+                        <dt class="col-md-3">İsim Soyisim</dt>
+                        <dd class="col-md-9">@Html.DisplayFor(model => model.Name) @Html.DisplayFor(model => model.SurName)</dd>
+
+                        <dt class="col-md-3">@Html.DisplayNameFor(model => model.CustomerAccountNumber)</dt>
+                        <dd class="col-md-9">@Html.DisplayFor(model => model.CustomerAccountNumber)</dd>
+
+                        <dt class="col-md-3">@Html.DisplayNameFor(model => model.Amount)</dt>
+                        <dd class="col-md-9" style="font-size:18px">
+                            @if (Model.Amount == Model.OldAmount)
+                            {
+                                if (Model.IsCoin)
+                                {
+                                    <span class="badge badge-success mb-1" style="font-size:100%">@Model.Amount.ToString("N0") ₺</span><br />
+                                    <span class="badge badge-primary" style="font-size:100%">@Model.ExchangeValue @Model.UnitSymbol</span>
+                                }
+                                else
+                                {
+                                    @Model.Amount.ToString("N0")
+                                }
+                            }
+                            else
+                            {
+                                <span class="badge badge-success" style="font-size:100%">@Model.Amount.ToString("N0")</span>
+                                <span class="badge badge-danger" style="font-size:100%">@String.Format("{0:N0}", Model.OldAmount)</span>
+                            }
+                        </dd>
+                    </dl>
+
+                    @if (!Model.IsCoin)
+                    {
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.AccountInfoId, null, htmlAttributes: new { @class = "control-label" })
+                            @Html.DropDownList("AccountInfoId", null, "Böl ve Öde", htmlAttributes: new { @class = "form-control form-control-sm select2", id = "currentAccountInfoId", @onchange = "qrFunc()" })
+                            @Html.ValidationMessageFor(model => model.AccountInfoId, "", new { @class = "text-danger" })
+                        </div>
+                    }
+                </div>
+
+                @if (Model.IsCoin)
+                {
+                    <div class="col-md-4">
+                        <div>
+                            @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+                            {
+                                <img class="mx-auto d-block" src="@_qr.GenerateQR((_coinsType.Where(x => x.UnitSymbol == Model.UnitSymbol).Select(x => x.Name.ToLower()).FirstOrDefault() + ":" + Model.CustomerWalletAddress + "?amount=" + Math.Round(Model.ExchangeValue ?? 0, 6)))" style="max-width:160px" />
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="col-md-4">
+                        <div id="qr_code">
+                            @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+                            {
+                                <img class="mx-auto d-block" src="@_qr.GenerateQR(("https://www.papara.com/personal/qr?accountNumber=" + Model.CustomerAccountNumber + "&currency=0&amount=" + Math.Round(Model.Amount)))" style="max-width:160px" />
+                            }
+                        </div>
+                    </div>
+                }
+
+            </div>
+            <hr />
+            @if (Model.Deposit == true)
+            {
+                <a class="btn btn-sm btn-info" href="@Url.Action("Deposit", "AccountTransactions")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+            }
+            else
+            {
+                <a class="btn btn-sm btn-info" href="@Url.Action("Draw", "AccountTransactions")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+            }
+            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-check-circle"></i> Onayla</button>
+        </form>
+
+    </div>
+</div>
+
+@if (User.IsInRole("IndexDrawSplit") && !Model.IsCoin)
+{
+    <div id="myAlert"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 border-bottom">
+                <h5 class="card-title">Tutar Böl</h5>
+                <div>
+                    <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#create"><i class="fas fa-plus-circle"></i> Böl</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="splitTable">
+                    <tr>
+                        <th>Id</th>
+                        <th>Hesap</th>
+                        <th>Tutar</th>
+                        <th id="sum"></th>
+                    </tr>
+                    @foreach (var item in ViewBag.DrawSplit)
+                    {
+                        <tr id="row-@item.Id">
+                            <td>@item.Id</td>
+                            <td>
+                                @item.AccountInfo.Name @item.AccountInfo.SurName (@item.AccountInfo.AccountNumber)
+                                @if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+                                {
+                                    <button type="button" class="btn btn-xs btn-primary mb-1" data-toggle="modal" data-target="#qrModal-@item.Id"><i class="fas fa-qrcode"></i></button>
+                                }
+                            </td>
+                            <td class="text-right">@item.Amount.ToString("N0")</td>
+                            <td>
+                                <button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="@item.Id" data-amount="@item.Amount" data-hesapid="@item.AccountInfoId"><i class="far fa-edit"></i> Düzenle</button>
+                                <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id="@item.Id"><i class="far fa-trash-alt"></i> Sil</button>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- tutar böl -->
+    <div class="modal fade" id="create" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Tutar Böl</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="amountCreate">Tutar</label>
+                        <input type="text" class="form-control" id="amountCreate" name="amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountInfoCreate">Hesap</label>
+                        <select class="custom-select custom-select-sm select2" id="accountInfoCreate">
+                            <option>Seçiniz</option>
+                            @foreach (var item in ViewBag.AccountInfo)
+                            {
+                                <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="create()"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- bölünmüş tutar düzenle -->
+    <div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Bölünmüş Tutar Düzenle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="amountCreate">Tutar</label>
+                        <input type="text" class="form-control" id="amountEdit" name="amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountInfoCreate">Hesap</label>
+                        <select class="custom-select custom-select-sm select2" id="accountInfoEdit">
+                            <option>Seçiniz</option>
+                            @foreach (var item in ViewBag.AccountInfo)
+                            {
+                                <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-success" id="editButton"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- bölünmüş tutar sil -->
+    <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Bölünmüş Tutar Sil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" role="alert">
+                        Silmek istediğinizden emin misiniz?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="sil"><i class="far fa-trash-alt"></i> Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    foreach (var item in ViewBag.DrawSplit)
+    {
+        if (Model.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New)
+        {
+            <div class="modal fade" id="qrModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+                    <div class="modal-content" id="modalContent-@item.Id">
+                        <div class="modal-header">
+                            <h5 class="modal-title">QR</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+
+                        <div class="modal-body">
+
+                            <div class="d-block text-center mb-3" style="font-size:16px">
+                                <span class="d-block mb-2">Hesap sahibi: @Model.Name @Model.SurName</span>
+                                <span class="d-block mb-2">Müşteri Hesap no: @Model.CustomerAccountNumber</span>
+                                <span class="d-block mb-2">Tutar: @item.Amount.ToString("N0")</span>
+                            </div>
+
+                            <img class="mx-auto d-block" src="@_qr.GenerateQR(("https://www.papara.com/personal/qr?accountNumber=" + Model.CustomerAccountNumber + "&currency=0&amount=" + Math.Round(item.Amount)))" style="max-width:160px" />
+                        </div>
+
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Kapat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+}
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/jquery.validate.tr.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+
+        function qrFunc() {
+            var data = $("#currentAccountInfoId").val();
+            if (data > 0) {
+                $("#qr_code").show();
+                console.log("show");
+            } else {
+                $("#qr_code").hide();
+                console.log("hide")
+            }
+        }
+
+        qrFunc();
+
+    </script>
+
+    @if (User.IsInRole("IndexDrawSplit"))
+    {
+        <script>
+            $('#create').on('hidden.bs.modal', function (e) {
+                $('#accountInfoCreate').val(null).trigger('change');
+                $('#amountCreate').val("");
+            })
+
+            $('#delete').on('shown.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                id = button.data('id') // Extract info from data-* attributes
+                $('#sil').click(function () {
+                    deleteItem(id);
+                });
+            })
+
+            function sumItem(id) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Sum", "DrawSplit")' + "/" + id,
+                    dataType:'json',
+                    async: true,
+                    success: function (data) {
+                        $('#sum').html(data.message)
+                        console.log('sum: ' + data.message)
+                    },
+                    fail: function (data) {
+                        alert("Hata");
+                    }
+                });
+            }
+
+            sumItem(@Model.Id)
+
+            function deleteItem(id) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Delete", "DrawSplit")' + "/" + id,
+                    dataType:'json',
+                    async: true,
+                    success: function (data) {
+                        $('#delete').modal('hide');
+                        console.log(data);
+                        if (data.type == "success") {
+                            $('#row-' + id).remove();
+                        }
+                        var _message = '<div class="alert alert-info" role="alert">'
+                            + '<b>' + data.type + ' ! </b>'
+                            + data.message
+                            + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                        $('#myAlert').html(_message)
+
+                        sumItem(@Model.Id)
+                    },
+                    fail: function (data) {
+                        alert("Hata");
+                    }
+                });
+            }
+
+            function create() {
+                if ($('#amountCreate').val() == null || $('#amountCreate').val() == "") {
+                    alert("Lütfen tutar giriniz.")
+                }
+                else if ($('#accountInfoCreate').val() == "Seçiniz") {
+                    alert("Lütfen hesap seçiniz.")
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Create", "DrawSplit")',
+                        dataType:'json',
+                        async: true,
+                        data: {
+                            accountTransactionsId: @Model.Id,
+                            accountInfoId: $('#accountInfoCreate').val(),
+                            amount: $('#amountCreate').val()
+                        },
+                        success: function (data) {
+                            $('#create').modal('hide');
+                            console.log(data);
+                            var _message = '<div class="alert alert-info" role="alert">'
+                                + '<b>' + data.type + ' ! </b>'
+                                + data.message
+                                + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                            $('#myAlert').html(_message)
+                            if (data.type == "success") {
+                                $("#splitTable").append(
+                                    '<tr id="row-' + data.id + '">'
+                                    + "<td>" + data.id + "</td>"
+                                    + "<td>" + data.hesap + "</td>"
+                                    + '<td class="text-right">' + formatCurrency(data.amount.toFixed(0)) + "</td>"
+                                    + "<td>"
+                                    + '<button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="' + data.id + '"data-amount="' + data.amount + '"data-hesapid="' + data.hesap_id + '"><i class="far fa-edit"></i> Düzenle</button>'
+                                    + '<button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id='+ data.id +'><i class="far fa-trash-alt"></i> Sil</button>'
+                                    +"</td>"
+                                );
+                            }
+                            $('#accountInfoCreate').val(null).trigger('change');
+                            $('#amountCreate').val("");
+
+                            sumItem(@Model.Id)
+                            location.reload();
+                        },
+                        fail: function (data) {
+                            alert("Hata");
+                        }
+                    });
+                }
+            }
+
+            $('#edit').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                id = button.data('id') // Extract info from data-* attributes
+                $('#amountEdit').val(button.data('amount'))
+                $('#accountInfoEdit').val(button.data('hesapid')).trigger('change');
+                $('#editButton').click(function () {
+                    edit(id);
+                });
+            })
+
+            function edit(id) {
+                if ($('#amountEdit').val() == null || $('#amountEdit').val() == "") {
+                    alert("Lütfen tutar giriniz.")
+                }
+                else if ($('#accountInfoEdit').val() == "Seçiniz") {
+                    alert("Lütfen hesap seçiniz.")
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Edit", "DrawSplit")' + "/" + id,
+                        dataType:'json',
+                        async: true,
+                        data: {
+                            accountTransactionsId: @Model.Id,
+                            accountInfoId: $('#accountInfoEdit').val(),
+                            amount: $('#amountEdit').val()
+                        },
+                        success: function (data) {
+                            $('#edit').modal('hide');
+                            console.log(data);
+                            var _message = '<div class="alert alert-info" role="alert">'
+                                + '<b>' + data.type + ' ! </b>'
+                                + data.message
+                                + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                            $('#myAlert').html(_message)
+                            if (data.type == "success") {
+                                $('#row-' + id).remove();
+                                $("#splitTable").append(
+                                    '<tr id="row-' + data.id + '">'
+                                    + "<td>" + data.id + "</td>"
+                                    + "<td>" + data.hesap + "</td>"
+                                    + '<td class="text-right">' + formatCurrency(data.amount.toFixed(0)) + "</td>"
+                                    + "<td>"
+                                    + '<button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="' + data.id + '"data-amount="' + data.amount + '"data-hesapid="' + data.hesap_id + '"><i class="far fa-edit"></i> Düzenle</button>'
+                                    + '<button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id='+ data.id +'><i class="far fa-trash-alt"></i> Sil</button>'
+                                    +"</td>"
+                                );
+                            }
+                            $('#accountInfoEdit').val(null).trigger('change');
+                            $('#amountEdit').val("");
+
+                            sumItem(@Model.Id)
+                            location.reload();
+                        },
+                        fail: function (data) {
+                            alert("Hata");
+                        }
+                    });
+                }
+            }
+        </script>
+    }
+}
+

@@ -1,0 +1,191 @@
+﻿@model QFinans.Areas.Api.Models.ShiftType
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 border-bottom">
+            <h5 class="card-title">@Model.Name <small class="text-muted">@Model.StartTime.ToString(@"hh\:mm") - @Model.EndTime.ToString(@"hh\:mm")</small></h5>
+            <div>
+                <button type="submit" class="btn btn-xs btn-success" data-toggle="modal" data-target="#addAccountInfo" title="Sil"><i class="fas fa-plus-circle"></i> Hesap Ekle</button>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="addAccountInfo" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Hesap Ekle</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    @using (Html.BeginForm("AddAccountInfo", "ShiftType", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("action", 0)
+                        <div class="modal-body">
+                            <div class="form-group d-none">
+                                <input class="form-control" type="number" id="ShiftTypeId" name="ShiftTypeId" value="@Model.Id" readonly>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="AccountInfoId">Hesap</label>
+                                <select class="form-control select2" id="AccountInfoId" name="AccountInfoId" required>
+                                    <option value="">Seçiniz</option>
+                                    @foreach (var item in ViewBag.AccountInfo)
+                                    {
+                                        <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <h6 class="card-subtitle mb-2">Hesaplar</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover table-dark">
+                <tr>
+                    <th>
+                        Id
+                    </th>
+                    <th>
+                        İsim
+                    </th>
+                    <th>
+                        Soyisim
+                    </th>
+                    <th>
+                        Hesap No
+                    </th>
+                    <th>Durum</th>
+                    <th></th>
+                </tr>
+                @foreach (var item in Model.ShiftTypeAccountInfo.Where(x => x.IsDeleted == false && x.IsClosed == false))
+                {
+                    <tr>
+                        <td>@item.AccountInfoId</td>
+                        <td>@item.AccountInfo.Name</td>
+                        <td>@item.AccountInfo.SurName</td>
+                        <td>@item.AccountInfo.AccountNumber</td>
+                        @if (item.AccountInfo.IsPassive == false)
+                        {
+                            <td><span class="badge badge-success">Aktif</span></td>
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-secondary">Pasif</span></td>
+                        }
+                        <td>
+                            <button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit-@item.Id" title="Edit"><i class="far fa-edit"></i></button>
+                            <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                        </td>
+                    </tr>
+                }
+            </table>
+        </div>
+
+        <hr />
+        <a class="btn btn-sm btn-info" href="@Url.Action("Index", "ShiftType")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+    </div>
+</div>
+
+@foreach (var item in Model.ShiftTypeAccountInfo.Where(x => x.IsDeleted == false && x.IsClosed == false))
+{
+    <div class="modal fade" id="edit-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hesap Düzenle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @using (Html.BeginForm("EditAccountInfo", "ShiftType", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    <input name="action" type="hidden" value="0">
+                    <input name="shiftTypeAccountInfoId" type="hidden" value="@item.Id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="AccountInfoId-@item.Id">Hesap</label>
+                            <select class="form-control select2" id="AccountInfoId-@item.Id" name="AccountInfoId" required>
+                                <option value="">Seçiniz</option>
+                                @foreach (var item2 in ViewBag.AccountInfoEdit)
+                                {
+                                    if (item2.Id == item.AccountInfoId)
+                                    {
+                                        <option value="@item2.Id" selected>@item2.Name @item2.SurName (@item2.AccountNumber)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@item2.Id">@item2.Name @item2.SurName (@item2.AccountNumber)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="delete-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Hesap Sil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                @using (Html.BeginForm("DeleteAccountInfo", "ShiftType", new { id = item.Id }, FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("action", 0)
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert">
+                            Silmek istediğinizden emin misiniz?
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                        <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+
+    </script>
+}

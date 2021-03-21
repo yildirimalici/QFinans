@@ -1,0 +1,340 @@
+﻿@model PagedList.IPagedList<QFinans.Models.AccountInfoViewModel>
+@using PagedList.Mvc;
+@using QFinans.Models
+@using QFinans.Areas.Api.Models
+@{
+    ViewBag.Title = "Hesap Bilgileri";
+
+    DateTime date = DateTime.Now.Date;
+    DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
+    DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
+}
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-3 border-bottom border-secondary">
+            <h5 class="card-title">Hazır Hesap Bilgileri</h5>
+            <div>
+                <a class="btn btn-xs btn-success" href="@Url.Action("Create", "AccountInfo")"><i class="fas fa-plus-circle"></i> Hesap Ekle</a>
+            </div>
+        </div>
+        
+        @using (Html.BeginForm("Index", "AccountInfo", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-2">
+                <div class="col-md-12 ">
+                    <div class="d-flex">
+                        <select class="custom-select custom-select-sm" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                            <option value="250">250</option>
+                        </select>
+                        <div class="flex-grow-1">
+                            <div class="input-group justify-content-end">
+                                @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control form-control-sm", @placeholder = "Arama yapmak için bir kelime yazın", @aria_describedby = "button-addon2" })
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm btn-info" type="submit" id="button-addon2"><i class="fas fa-search"></i> Ara</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="all-account-tab" data-toggle="tab" href="#all-account" role="tab" aria-controls="all-account" aria-selected="false">Hesaplar</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="active-account-tab" data-toggle="tab" href="#active-account" role="tab" aria-controls="active-account" aria-selected="true">Aktif Hesaplar</a>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+
+            <div class="tab-pane fade show active" id="all-account" role="tabpanel" aria-labelledby="all-account-tab">
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                        <tr>
+                            <th>
+                                Id
+                            </th>
+                            <th>
+                                İsim
+                            </th>
+                            <th>
+                                Soyisim
+                            </th>
+                            <th>
+                                Hesap No
+                            </th>
+                            <th>
+                                İşlem Sayısı <span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım sayısı."><i class="fas fa-info-circle"></i></span>
+                            </th>
+                            <th>Toplam Yatırım@*<span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım tutarı."><i class="fas fa-info-circle"></i></span>*@</th>
+                            @*<th>Toplam Komisyon</th>*@
+                            <th>Toplam Çekim@*<span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki çekim tutarı."><i class="fas fa-info-circle"></i></span>*@</th>
+                            <th>Bakiye</th>
+                            <th>Durum</th>
+                            <th>Tutar Yönlendirme</th>
+                            <th>Shift</th>
+                            <th>Cihaz</th>
+                            <th></th>
+                        </tr>
+
+                        @foreach (var item in Model)
+                        {
+                            <tr class="@(@item.AccountInfoTypeName.ToLower().Contains("silver") == true ? "bg-silver": "") @(@item.AccountInfoTypeName.ToLower().Contains("gold") == true ? "bg-gold": "")">
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Id)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.SurName)
+                                </td>
+                                <td data-toggle="tooltip" data-placement="bottom" title="@item.AccountInfoTypeName">
+                                    @Html.DisplayFor(modelItem => item.AccountNumber)
+                                </td>
+                                @* işlem sayısı *@
+                                <td>
+                                    @item.TransactionCount.ToString("N0")
+                                </td>
+                                @* toplam yatırım *@
+                                <td class="text-right">
+                                    @item.DepositSum.ToString("N2")
+                                </td>
+                                @* toplam komisyon *@
+                                @*<td class="text-right">
+                                    @item.BankCharge.ToString("N2"))
+                                </td>*@
+                                @* toplam çekim *@
+                                <td class="text-right">
+                                    @((item.DrawSum + item.DrawSplitSum).ToString("N2"))
+                                </td>
+
+                                @* toplam bakiye *@
+                                <td class="text-right">
+                                    @((item.DepositSum + item.CashInSum - item.CashOutSum - item.DrawSum - item.DrawSplitSum - item.BankCharge).ToString("N2"))
+                                </td>
+                                
+                                @* durum *@
+                                @if (item.IsPassive == false)
+                                {
+                                    <td><span class="badge badge-success">Aktif</span></td>
+                                }
+                                else
+                                {
+                                    <td><span class="badge badge-secondary">Pasif</span></td>
+                                }
+                                <td class="text-right">@Html.DisplayFor(modelItem => item.AccountAmountRedirectName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.ShiftName)</td>
+                                <td>@Html.DisplayFor(modelItem => item.Device)</td>
+                                <td>
+                                    <a class="btn btn-xs btn-info" href="@Url.Action("Details", "AccountInfo", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                                    <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "AccountInfo", new { id = item.Id })" title="Düzenle"><i class="far fa-edit"></i></a>
+                                    <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                                    <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">Sil</h5>
+                                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                        <span aria-hidden="true">&times;</span>
+                                                    </button>
+                                                </div>
+
+                                                @using (Html.BeginForm("Delete", "AccountInfo", new { id = item.Id }, FormMethod.Post))
+                                                {
+                                                    @Html.AntiForgeryToken()
+
+                                                    <div class="modal-body">
+                                                        <div class="alert alert-danger" role="alert">
+                                                            Silmek istediğinizden emin misiniz?
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                                        <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                                                    </div>
+                                                }
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="active-account" role="tabpanel" aria-labelledby="home-tab">
+                <div class="table-responsive mt-4">
+                    <table class="table table-sm table-bordered table-hover table-dark text-white-50">
+                        <tr>
+                            <th>
+                                Id
+                            </th>
+                            <th>
+                                İsim
+                            </th>
+                            <th>
+                                Soyisim
+                            </th>
+                            <th>
+                                Hesap No
+                            </th>
+                            <th>
+                                İşlem Sayısı <span data-toggle="tooltip" data-placement="bottom" title="@startDate @endDate arasındaki yatırım sayısı."><i class="fas fa-info-circle"></i></span>
+                            </th>
+                            <th>Toplam Yatırım</th>
+                            <th>Toplam Çekim</th>
+                            <th>Bakiye</th>
+                            <th>Durum</th>
+                            <th>Tutar Yönlendirme</th>
+                            <th>Cihaz</th>
+                            <th>Sıra No</th>
+                            <th style="width:120px"></th>
+                        </tr>
+
+                        @foreach (var item in ViewBag.ActiveAccountInfo)
+                        {
+                    <tr class="@(@item.AccountInfoTypeName.ToLower().Contains("silver") == true ? "bg-silver": "") @(@item.AccountInfoTypeName.ToLower().Contains("gold") == true ? "bg-gold": "")">
+                        <td>
+                            @item.Id
+                        </td>
+                        <td>
+                            @item.Name
+                        </td>
+                        <td>
+                            @item.SurName
+                        </td>
+                        <td data-toggle="tooltip" data-placement="bottom" title="@item.AccountInfoTypeName">
+                            @item.AccountNumber
+                        </td>
+                        <td>
+                            @item.TransactionCount.ToString("N0")
+                        </td>
+                        @* toplam yatırım *@
+                        <td class="text-right">
+                            @item.DepositSum.ToString("N2")
+                        </td>
+                        @* toplam komisyon *@
+                        @*<td class="text-right">
+            @(((item.ConfirmDepositSum + item.NewDepositSum) * 3.4M / 100).ToString("N2"))
+        </td>*@
+                        @* toplam çekim *@
+                        <td class="text-right">
+                            @((item.DrawSum + item.DrawSplitSum).ToString("N2"))
+                        </td>
+                        @* toplam bakiye *@
+                        <td class="text-right">
+                            @((item.DepositSum + item.CashInSum - item.CashOutSum - item.DrawSum - item.DrawSplitSum - item.BankCharge).ToString("N2"))
+                        </td>
+                        @if (item.IsPassive == false)
+                        {
+
+                            if (item.Id == ViewBag.CurrentActiveAccountId)
+                            {
+                                <td><span class="badge badge-primary">İşlemde</span></td>
+                            }
+                            else
+                            {
+                                <td><span class="badge badge-success">Aktif</span></td>
+                            }
+                        }
+                        else
+                        {
+                            <td><span class="badge badge-secondary">Pasif</span></td>
+                        }
+                        @if (Model.Any(x => x.Id == item.Id && x.AccountAmountRedirectName != null))
+                        {
+                            <td class="text-right">@Model.Where(x => x.Id == item.Id).FirstOrDefault().AccountAmountRedirectName</td>
+                        }
+                        else
+                        {
+                            <td class="text-right"></td>
+                        }
+                        <td>@item.Device</td>
+                        <td>@item.OrderNumber</td>
+                        <td>
+                            <a class="btn btn-xs btn-info" href="@Url.Action("Details", "AccountInfo", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>
+                            <a class="btn btn-xs btn-warning" href="@Url.Action("Edit", "AccountInfo", new { id = item.Id })" title="Düzenle"><i class="far fa-edit"></i></a>
+                            <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                            <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+                                <div class="modal-dialog" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Sil</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+
+                                        @using (Html.BeginForm("Delete", "AccountInfo", new { id = item.Id }, FormMethod.Post))
+                                        {
+                                            @Html.AntiForgeryToken()
+
+                                            <div class="modal-body">
+                                                <div class="alert alert-danger" role="alert">
+                                                    Silmek istediğinizden emin misiniz?
+                                                </div>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-sm btn-info" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                                                <button type="submit" class="btn btn-sm btn-danger"><i class="far fa-trash-alt"></i> Sil</button>
+                                            </div>
+                                        }
+
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                        }
+
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <hr />
+        <div class="row">
+            <div class="col-sm-2">
+                <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
+            </div>
+            <div class="col-sm-10">
+                @Html.PagedListPager(Model, page => Url.Action("Index", "AccountInfo", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                                                                            , new PagedListRenderOptions
+                                                                            {
+                                                                                UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
+                                                                                LiElementClasses = new string[] { "page-item" },
+                                                                                ContainerDivClasses = new string[] { "page float-right" }
+                                                                            })
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        setInterval(function () {
+            window.location.reload(1);
+        }, 600000);
+
+        $("#selectPageSize").val(@ViewBag.CustomPageSize);
+
+        function getPageSize() {
+            $("#formSearch").submit();
+        };
+    </script>
+}

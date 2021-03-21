@@ -1,0 +1,436 @@
+﻿@model QFinans.Areas.Api.Models.AccountTransactions
+
+@{
+    ViewBag.Title = "Talep Düzenle";
+}
+
+<div class="card mb-3">
+    <div class="card-body">
+        <h5 class="card-title">Talep Düzenle</h5>
+        <hr />
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+
+            <div class="form-horizontal">
+
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @Html.HiddenFor(model => model.Id)
+
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.UserName, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.UserName, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                        @Html.ValidationMessageFor(model => model.UserName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                        @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.SurName, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.SurName, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                        @Html.ValidationMessageFor(model => model.SurName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                @*<div class="form-group row">
+                        @Html.LabelFor(model => model.TransactionStatus, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.EnumDropDownListFor(model => model.TransactionStatus, "Seçiniz", htmlAttributes: new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.TransactionStatus, "", new { @class = "text-danger" })
+                            <small class="form-text text-muted">New: Yeni, Confirm: Onay, Deny: Reddet</small>
+                        </div>
+                    </div>*@
+
+                @if (Model.Deposit == false)
+                {
+                    <div class="form-group row">
+                        @Html.LabelFor(model => model.CustomerAccountNumber, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.CustomerAccountNumber, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                            @Html.ValidationMessageFor(model => model.CustomerAccountNumber, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        @Html.LabelFor(model => model.AccountInfoId, null, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.DropDownList("AccountInfoId", null, "Böl ve Öde", htmlAttributes: new { @class = "form-control select2" })
+                            @Html.ValidationMessageFor(model => model.AccountInfoId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="form-group row">
+                        @Html.LabelFor(model => model.AccountInfoId, null, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-10">
+                            @Html.DropDownList("AccountInfoId", null, "Seçiniz", htmlAttributes: new { @class = "form-control select2" })
+                            @Html.ValidationMessageFor(model => model.AccountInfoId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                }
+
+                 @if (Model.Deposit == true)
+                 {
+                     <div class="form-group row">
+                    @Html.LabelFor(model => model.IsFree, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        <div class="custom-checkbox">
+                            @Html.EditorFor(model => model.IsFree, new { @class = "custom-control-input" })
+                            @Html.ValidationMessageFor(model => model.IsFree, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </div>
+                 }
+
+                <div class="form-group row">
+                    @Html.LabelFor(model => model.Note, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.TextAreaFor(model => model.Note, new { @class = "form-control", @rows = "6" })
+                        @Html.ValidationMessageFor(model => model.Note, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <hr />
+                @if (Model.Deposit == true)
+                {
+                    <a class="btn btn-sm btn-info" href="@Url.Action("Deposit", "AccountTransactions")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+                }
+                else
+                {
+                    <a class="btn btn-sm btn-info" href="@Url.Action("Draw", "AccountTransactions")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+                }
+                <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+            </div>
+        }
+    </div>
+</div>
+
+@if (Model.Deposit == false && User.IsInRole("IndexDrawSplit"))
+{
+    <div class="" id="myAlert"></div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3 border-bottom">
+                <h5 class="card-title">Tutar Böl</h5>
+                <div>
+                    <button type="button" class="btn btn-xs btn-success" data-toggle="modal" data-target="#create"><i class="fas fa-plus-circle"></i> Böl</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="splitTable">
+                    <tr>
+                        <th>Id</th>
+                        <th>Hesap</th>
+                        <th>Tutar</th>
+                        <th id="sum"></th>
+                    </tr>
+                    @foreach (var item in ViewBag.DrawSplit)
+                    {
+                        <tr id="row-@item.Id">
+                            <td>@item.Id</td>
+                            <td>@item.AccountInfo.Name @item.AccountInfo.SurName (@item.AccountInfo.AccountNumber)</td>
+                            <td class="text-right">@item.Amount.ToString("N0")</td>
+                            <td>
+                                <button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="@item.Id" data-amount="@item.Amount" data-hesapid="@item.AccountInfoId"><i class="far fa-edit"></i> Düzenle</button>
+                                <button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id="@item.Id"><i class="far fa-trash-alt"></i> Sil</button>
+                            </td>
+                        </tr>
+                    }
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- tutar böl -->
+    <div class="modal fade" id="create" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Tutar Böl</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="amountCreate">Tutar</label>
+                        <input type="text" class="form-control" id="amountCreate" name="amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountInfoCreate">Hesap</label>
+                        <select class="custom-select custom-select-sm select2" id="accountInfoCreate">
+                            <option>Seçiniz</option>
+                            @foreach (var item in ViewBag.AccountInfo)
+                            {
+                                <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-success" onclick="create()"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- bölünmüş tutar düzenle -->
+    <div class="modal fade" id="edit" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Bölünmüş Tutar Düzenle</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="amountCreate">Tutar</label>
+                        <input type="text" class="form-control" id="amountEdit" name="amount">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accountInfoCreate">Hesap</label>
+                        <select class="custom-select custom-select-sm select2" id="accountInfoEdit">
+                            <option>Seçiniz</option>
+                            @foreach (var item in ViewBag.AccountInfo)
+                            {
+                                <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-success" id="editButton"><i class="fas fa-save"></i> Kaydet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- bölünmüş tutar sil -->
+    <div class="modal fade" id="delete" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Bölünmüş Tutar Sil</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" role="alert">
+                        Silmek istediğinizden emin misiniz?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"><i class="fas fa-times-circle"></i> Vazgeç</button>
+                    <button type="button" class="btn btn-sm btn-danger" id="sil"><i class="far fa-trash-alt"></i> Sil</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts{
+    @Scripts.Render("~/bundles/jqueryval")
+    <script src="~/Scripts/jquery.validate.tr.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+    </script>
+
+    @if (Model.Deposit == false && User.IsInRole("IndexDrawSplit"))
+    {
+<script>
+            $('#create').on('hidden.bs.modal', function (e) {
+            $('#accountInfoCreate').val(null).trigger('change');
+                $('#amountCreate').val("");
+            })
+
+            $('#delete').on('shown.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                id = button.data('id') // Extract info from data-* attributes
+                $('#sil').click(function () {
+                    deleteItem(id);
+                });
+            })
+
+            function sumItem(id) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Sum", "DrawSplit")' + "/" + id,
+                    dataType:'json',
+                    async: true,
+                    success: function (data) {
+                        $('#sum').html(data.message)
+                        console.log('sum: ' + data.message)
+                    },
+                    fail: function (data) {
+                        alert("Hata");
+                    }
+                });
+            }
+
+            sumItem(@Model.Id)
+
+            function deleteItem(id) {
+                $.ajax({
+                    type: 'POST',
+                    url: '@Url.Action("Delete", "DrawSplit")' + "/" + id,
+                    dataType:'json',
+                    async: true,
+                    success: function (data) {
+                        $('#delete').modal('hide');
+                        console.log(data);
+                        if (data.type == "success") {
+                            $('#row-' + id).remove();
+                        }
+                        var _message = '<div class="alert alert-info" role="alert">'
+                            + '<b>' + data.type + ' ! </b>'
+                            + data.message
+                            + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                        $('#myAlert').html(_message)
+
+                    },
+                    fail: function (data) {
+                        alert("Hata");
+                    }
+                });
+            }
+
+            function create() {
+                if ($('#amountCreate').val() == null || $('#amountCreate').val() == "") {
+                    alert("Lütfen tutar giriniz.")
+                }
+                else if ($('#accountInfoCreate').val() == "Seçiniz") {
+                    alert("Lütfen hesap seçiniz.")
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Create", "DrawSplit")',
+                        dataType:'json',
+                        async: true,
+                        data: {
+                            accountTransactionsId: @Model.Id,
+                            accountInfoId: $('#accountInfoCreate').val(),
+                            amount: $('#amountCreate').val()
+                        },
+                        success: function (data) {
+                            $('#create').modal('hide');
+                            console.log(data);
+                            var _message = '<div class="alert alert-info" role="alert">'
+                                + '<b>' + data.type + ' ! </b>'
+                                + data.message
+                                + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                            $('#myAlert').html(_message)
+                            if (data.type == "success") {
+                                $("#splitTable").append(
+                                    '<tr id="row-' + data.id + '">'
+                                    + "<td>" + data.id + "</td>"
+                                    + "<td>" + data.hesap + "</td>"
+                                    + '<td class="text-right">' + formatCurrency(data.amount.toFixed(0)) + "</td>"
+                                    + "<td>"
+                                    + '<button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="' + data.id + '"data-amount="' + data.amount + '"data-hesapid="' + data.hesap_id + '"><i class="far fa-edit"></i> Düzenle</button>'
+                                    + '<button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id='+ data.id +'><i class="far fa-trash-alt"></i> Sil</button>'
+                                    +"</td>"
+                                );
+                            }
+                            $('#accountInfoCreate').val(null).trigger('change');
+                            $('#amountCreate').val("");
+                        },
+                        fail: function (data) {
+                            alert("Hata");
+                        }
+                    });
+                }
+            }
+
+            $('#edit').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget) // Button that triggered the modal
+                id = button.data('id') // Extract info from data-* attributes
+                $('#amountEdit').val(button.data('amount'))
+                $('#accountInfoEdit').val(button.data('hesapid')).trigger('change');
+                $('#editButton').click(function () {
+                    edit(id);
+                });
+            })
+
+            function edit(id) {
+                if ($('#amountEdit').val() == null || $('#amountEdit').val() == "") {
+                    alert("Lütfen tutar giriniz.")
+                }
+                else if ($('#accountInfoEdit').val() == "Seçiniz") {
+                    alert("Lütfen hesap seçiniz.")
+                } else {
+                    $.ajax({
+                        type: 'POST',
+                        url: '@Url.Action("Edit", "DrawSplit")' + "/" + id,
+                        dataType:'json',
+                        async: true,
+                        data: {
+                            accountTransactionsId: @Model.Id,
+                            accountInfoId: $('#accountInfoEdit').val(),
+                            amount: $('#amountEdit').val()
+                        },
+                        success: function (data) {
+                            $('#edit').modal('hide');
+                            console.log(data);
+                            var _message = '<div class="alert alert-info" role="alert">'
+                                + '<b>' + data.type + ' ! </b>'
+                                + data.message
+                                + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
+                            $('#myAlert').html(_message)
+                            if (data.type == "success") {
+                                $('#row-' + id).remove();
+                                $("#splitTable").append(
+                                    '<tr id="row-' + data.id + '">'
+                                    + "<td>" + data.id + "</td>"
+                                    + "<td>" + data.hesap + "</td>"
+                                    + '<td class="text-right">' + formatCurrency(data.amount.toFixed(0)) + "</td>"
+                                    + "<td>"
+                                    + '<button type="button" class="btn btn-xs btn-warning" data-toggle="modal" data-target="#edit" data-id="' + data.id + '"data-amount="' + data.amount + '"data-hesapid="' + data.hesap_id + '"><i class="far fa-edit"></i> Düzenle</button>'
+                                    + '<button type="button" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#delete" data-id='+ data.id +'><i class="far fa-trash-alt"></i> Sil</button>'
+                                    +"</td>"
+                                );
+                            }
+                            $('#accountInfoEdit').val(null).trigger('change');
+                            $('#amountEdit').val("");
+                        },
+                        fail: function (data) {
+                            alert("Hata");
+                        }
+                    });
+                }
+            }
+</script>
+    }
+}

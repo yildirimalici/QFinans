@@ -1,0 +1,50 @@
+﻿@model QFinans.Areas.Api.Models.AccountInfoStatus
+
+@{
+    ViewBag.Title = "Create";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Hesap Durumu Ekle</h5>
+        <hr />
+
+        @using (Html.BeginForm())
+        {
+            @Html.AntiForgeryToken()
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.TextColor, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.TextColor, new { htmlAttributes = new { @class = "form-control jscolor" } })
+                    @Html.ValidationMessageFor(model => model.TextColor, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.BgColor, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.BgColor, new { htmlAttributes = new { @class = "form-control jscolor" } })
+                    @Html.ValidationMessageFor(model => model.BgColor, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <hr />
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "AccountInfoStatus")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+            <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

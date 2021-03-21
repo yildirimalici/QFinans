@@ -1,0 +1,57 @@
+﻿@model IEnumerable<QFinans.Areas.Api.Models.SystemParameters>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.BankChargeTransactionLimit)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.BankChargeAmountLimit)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.BalanceEditAmount)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.BalanceStartDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.BankCharge)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.BankChargeTransactionLimit)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.BankChargeAmountLimit)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.BalanceEditAmount)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.BalanceStartDate)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.BankCharge)
+        </td>
+        <td>
+            @Html.ActionLink("Edit", "Edit", new { id=item.Id }) |
+            @Html.ActionLink("Details", "Details", new { id=item.Id }) |
+            @Html.ActionLink("Delete", "Delete", new { id=item.Id })
+        </td>
+    </tr>
+}
+
+</table>

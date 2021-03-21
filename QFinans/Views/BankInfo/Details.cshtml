@@ -1,0 +1,107 @@
+﻿@model QFinans.Areas.Api.Models.BankInfo
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Banka Hesap Detayı</h5>
+        <hr />
+
+        <dl class="row">
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.BankTypeId)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.BankTypeId)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Name)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Name)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Surname)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Surname)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.BranchCode)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.BranchCode)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.AccountNumber)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.AccountNumber)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.Iban)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.Iban)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.MinAmount)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.MinAmount)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.IsPassive)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.IsPassive)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.IsArchive)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.IsArchive)
+            </dd>
+
+            <dt class="col-md-3">
+                @Html.DisplayNameFor(model => model.OrderNumber)
+            </dt>
+
+            <dd class="col-md-9">
+                @Html.DisplayFor(model => model.OrderNumber)
+            </dd>
+
+        </dl>
+
+        <hr />
+        @if (Model.IsArchive == true)
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("Archive", "BankInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+        else
+        {
+            <a class="btn btn-sm btn-info" href="@Url.Action("Index", "BankInfo")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
+        }
+
+    </div>
+</div>

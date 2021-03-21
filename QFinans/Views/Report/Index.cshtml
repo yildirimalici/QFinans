@@ -1,0 +1,83 @@
+﻿@model IEnumerable<QFinans.Models.DailyTansactionReportSumViewModel>
+
+@{
+    ViewBag.Title = "DailyTransactionReport";
+
+    var data = Model.GroupBy(x => new { x.Year, x.Month }).Select(g => new
+    {
+        year = g.Key.Year,
+        month = g.Key.Month,
+        date = new DateTime(g.Key.Year, g.Key.Month, 1),
+        confirmDepositCount = g.Sum(x => x.ConfirmDepositCount),
+        confirmDepositSum = g.Sum(x => x.ConfirmDepositSum),
+        confirmDrawCount = g.Sum(x => x.ConfirmDrawCount),
+        confirmDrawSum = g.Sum(x => x.ConfirmDrawSum)
+    });
+
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Günlük İşlem Raporu</h5>
+        <hr />
+
+        @using (Html.BeginForm("Index", "Report", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <div class="row mb-4 align-items-end">
+                 <div class="col-md-5">
+                        <label>Başlangıç</label>
+                        @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                    </div>
+                    <div class="col-md-5">
+                        <label>Bitiş</label>
+                        @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                    </div>
+
+                <div class="col-md-2">
+                    <div class="d-flex flex-row-reverse">
+                        <button class="btn btn-sm btn-info" type="submit"><i class="fas fa-search"></i> Ara</button>
+                    </div>
+                </div>
+
+            </div>
+        }
+
+        <div class="table-responsive mt-3">
+            <table class="table table-sm table-bordered table-hover table-dark text-white-50" id="reportTable">
+                <thead>
+                    <tr>
+                        <th>Tarih</th>
+                        <th>Onaylı Yatırım Sayısı</th>
+                        <th>Onaylı Yatırım Tutarı</th>
+                        <th>Onaylı Çekim Sayısı</th>
+                        <th>Onaylı Çekim Tutarı</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center">@(Convert.ToDateTime((item.Day + "." + item.Month + "." + item.Year)).ToShortDateString())</td>
+                            <td class="text-right">@item.ConfirmDepositCount.ToString("N0")</td>
+                            <td class="text-right">@item.ConfirmDepositSum.ToString("N2")</td>
+                            <td class="text-right">@item.ConfirmDrawCount.ToString("N0")</td>
+                            <td class="text-right">@item.ConfirmDrawSum.ToString("N2")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th>Toplam</th>
+                        <th class="text-right">@Model.Sum(x => x.ConfirmDepositCount).ToString("N0")</th>
+                        <th class="text-right">@Model.Sum(x => x.ConfirmDepositSum).ToString("N2")</th>
+                        <th class="text-right">@Model.Sum(x => x.ConfirmDrawCount).ToString("N0")</th>
+                        <th class="text-right">@Model.Sum(x => x.ConfirmDrawSum).ToString("N2")</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+
