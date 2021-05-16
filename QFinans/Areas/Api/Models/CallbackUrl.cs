@@ -9,7 +9,9 @@ namespace QFinans.Areas.Api.Models
     {
         public int Id { get; set; }
 
-        public string Papara { get; set; }
+        public string PaparaDeposit { get; set; }
+
+        public string PaparaDraw { get; set; }
 
         public string Coinbase { get; set; }
 

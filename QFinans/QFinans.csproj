@@ -258,6 +258,7 @@
     <Compile Include="Controllers\SystemParametersController.cs" />
     <Compile Include="CustomFilters\CustomAuth.cs" />
     <Compile Include="CustomFilters\CustomAuthController.cs" />
+    <Compile Include="CustomFilters\LogJsonAttribute.cs" />
     <Compile Include="CustomFilters\LogAttribute.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -2435,6 +2436,7 @@
     <Content Include="Views\CustomerBankInfo\Index.cshtml" />
     <Content Include="Views\Report\CashFlow.cshtml" />
     <Content Include="Views\AccountTransactions\EditCoin.cshtml" />
+    <Content Include="Views\Home\GetQR.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -49,6 +49,8 @@
                         Adı
                     </th>
                     <th>Açıklama Gerekli mi?</th>
+                    <th>Diğer Kullanıcılar Görsün mü?</th>
+                    <th>İşlem Sayısına Dahil Edilsin mi?</th>
                     <th></th>
                 </tr>
 
@@ -63,6 +65,26 @@
                         </td>
                         <td>
                             @if (item.IsExplanationRequired)
+                            {
+                                <span><i class="fas fa-check"></i></span>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsOtherUserSee)
+                            {
+                                <span><i class="fas fa-check"></i></span>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.IsTransactionCount)
                             {
                                 <span><i class="fas fa-check"></i></span>
                             }

@@ -28,7 +28,20 @@ namespace QFinans.Controllers
 
         [CustomAuth(Roles = "DepositAccountTransactions")]
         // GET: Islemler
-        public ActionResult Deposit(string currentFilter, string searchString, int? page, int? customPageSize, DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo, TransactionStatus? transactionStatus, TransactionStatus? currentTransactionStatus)
+        public ActionResult Deposit(
+            string currentFilter,
+            string searchString,
+            int? page,
+            int? customPageSize,
+            DateTime? currentDateFrom,
+            DateTime? currentDateTo,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            TransactionStatus? transactionStatus,
+            TransactionStatus? currentTransactionStatus,
+            int? accountInfoId,
+            int? currentAccountInfoId
+            )
         {
             if (searchString != null)
             {
@@ -41,9 +54,10 @@ namespace QFinans.Controllers
             ViewBag.CurrentFilter = searchString;
 
             DateTime date = DateTime.Now.Date;
-            DateTime startDate = dateFrom ?? new DateTime(date.Year, date.Month, 1).AddHours(-1);
+            DateTime startDate = currentDateFrom ?? new DateTime(date.Year, date.Month, 1).AddHours(-1);
 
-            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate).Include(x => x.AccountInfo);
+            //IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate).Include(x => x.AccountInfo);
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == true).Include(x => x.AccountInfo);
 
             if (transactionStatus != null) { page = 1; } else { transactionStatus = currentTransactionStatus; }
             ViewBag.CurrentTransactionStatusId = transactionStatus;
@@ -60,10 +74,10 @@ namespace QFinans.Controllers
             if (dateTo.HasValue)
                 accountTransactions = accountTransactions.Where(x => x.AddDate <= dateTo);
 
-            if (transactionStatus != null) { page = 1; } else { transactionStatus = currentTransactionStatus; }
-            ViewBag.CurrentTransactionStatus = transactionStatus;
-            if (transactionStatus.HasValue)
-                accountTransactions = accountTransactions.Where(x => x.TransactionStatus == transactionStatus);
+            if (accountInfoId != null) { page = 1; } else { accountInfoId = currentAccountInfoId; }
+            ViewBag.CurrentAccountInfoId = accountInfoId;
+            if (accountInfoId.HasValue)
+                accountTransactions = accountTransactions.Where(x => x.AccountInfoId == accountInfoId);
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -97,7 +111,20 @@ namespace QFinans.Controllers
         }
 
         [CustomAuth(Roles = "DrawAccountTransactions")]
-        public ActionResult Draw(string currentFilter, string searchString, int? page, int? customPageSize, DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo, TransactionStatus? transactionStatus, TransactionStatus? currentTransactionStatus)
+        public ActionResult Draw(
+            string currentFilter,
+            string searchString,
+            int? page,
+            int? customPageSize,
+            DateTime? currentDateFrom,
+            DateTime? currentDateTo,
+            DateTime? dateFrom,
+            DateTime? dateTo,
+            TransactionStatus? transactionStatus,
+            TransactionStatus? currentTransactionStatus,
+            int? accountInfoId,
+            int? currentAccountInfoId
+            )
         {
             if (searchString != null)
             {
@@ -110,9 +137,10 @@ namespace QFinans.Controllers
             ViewBag.CurrentFilter = searchString;
 
             DateTime date = DateTime.Now.Date;
-            DateTime startDate = dateFrom ?? new DateTime(date.Year, date.Month, 1).AddHours(-1);
+            DateTime startDate = currentDateFrom ?? new DateTime(date.Year, date.Month, 1).AddHours(-1);
 
-            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate).Include(h => h.AccountInfo).Include(h => h.DrawSplit);
+            //IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate).Include(h => h.AccountInfo).Include(h => h.DrawSplit);
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.Deposit == false).Include(h => h.AccountInfo).Include(h => h.DrawSplit);
 
             if (dateFrom != null) { page = 1; } else { dateFrom = currentDateFrom; }
             ViewBag.CurrentDateFrom = dateFrom;
@@ -128,6 +156,11 @@ namespace QFinans.Controllers
             ViewBag.CurrentTransactionStatus = transactionStatus;
             if (transactionStatus.HasValue)
                 accountTransactions = accountTransactions.Where(x => x.TransactionStatus == transactionStatus);
+
+            if (accountInfoId != null) { page = 1; } else { accountInfoId = currentAccountInfoId; }
+            ViewBag.CurrentAccountInfoId = accountInfoId;
+            if (accountInfoId.HasValue)
+                accountTransactions = accountTransactions.Where(x => x.AccountInfoId == accountInfoId);
 
             if (!String.IsNullOrEmpty(searchString))
             {
@@ -429,6 +462,10 @@ namespace QFinans.Controllers
                 //TempData["warning"] = "Callback api çalışmadı.";
                 //return RedirectToAction("Deposit");
             }
+            else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
+            }
             else
             {
                 TempData["warning"] = "Callback api çalışmadı.";
@@ -503,7 +540,7 @@ namespace QFinans.Controllers
                 return View(accountTransactions);
             }
 
-            if (drawSplitCount == 0 && accountInfoId == null)
+            if (drawSplitCount == 0 && accountInfoId == null && accountTransactions.IsCoin == false)
             {
                 TempData["warning"] = "Lütfen hesap seçiniz.";
                 return View(accountTransactions);
@@ -526,6 +563,10 @@ namespace QFinans.Controllers
                 return RedirectToAction("CallBackApiHash", "AccountTransactions", new { transid = id });
                 //TempData["warning"] = "Callback api çalışmadı.";
                 //return RedirectToAction("Draw");
+            }
+            else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
             }
             else
             {
@@ -681,6 +722,10 @@ namespace QFinans.Controllers
                 //TempData["warning"] = "Callback api çalışmadı.";
                 //return RedirectToAction("Draw");
             }
+            else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
+            }
             else
             {
                 TempData["warning"] = "Callback api çalışmadı.";
@@ -717,13 +762,13 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "CallBackApiAccountTransactions")]
         public ActionResult CallBackApi(int? transid)
         {
-            var _calbackUrl = db.CallbackUrl.FirstOrDefault();
+            var _callbackUrl = db.CallbackUrl.FirstOrDefault();
             AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
             string _url;
             if (accountTransactions.IsCoin == true)
             {
                 //_url = "https://www.app-dinamo.com/api/coinbase/callback";
-                _url = _calbackUrl.Coinbase;
+                _url = _callbackUrl.Coinbase;
             } else if (accountTransactions.IsMoneyTransfer == true)
             {
                 if (accountTransactions.Deposit == true)
@@ -739,7 +784,14 @@ namespace QFinans.Controllers
             } else
             {
                 //_url = "https://www.app-dinamo.com/api/paparapro/callback";
-                _url = _calbackUrl.Papara;
+                if (accountTransactions.Deposit == false)
+                {
+                    _url = _callbackUrl.PaparaDraw;
+                }
+                else
+                {
+                    _url = _callbackUrl.PaparaDeposit;
+                }
             }
 
             string data = GetCallBackApiData(transid);
@@ -792,6 +844,7 @@ namespace QFinans.Controllers
                     "id=" + at.Id +
                     "&username=" + at.UserName +
                     "&name=" + at.Name +
+                    //"&middlename=" + at.MiddleName +
                     "&surname=" + at.SurName +
                     "&type=deposit" +
                     "&message=" + at.Note +
@@ -805,6 +858,7 @@ namespace QFinans.Controllers
                     "id=" + at.Id +
                     "&username=" + at.UserName +
                     "&name=" + at.Name +
+                    //"&middlename=" + at.MiddleName +
                     "&surname=" + at.SurName +
                     "&type=deposit" +
                     "&message=" + at.Note +
@@ -818,6 +872,7 @@ namespace QFinans.Controllers
                     "id=" + at.Id +
                     "&username=" + at.UserName +
                     "&name=" + at.Name +
+                    //"&middlename=" + at.MiddleName +
                     "&surname=" + at.SurName +
                     "&type=draw" +
                     "&message=" + at.Note +
@@ -832,6 +887,7 @@ namespace QFinans.Controllers
                     "id=" + at.Id +
                     "&username=" + at.UserName +
                     "&name=" + at.Name +
+                    //"&middlename=" + at.MiddleName +
                     "&surname=" + at.SurName +
                     "&type=draw" +
                     "&message=" + at.Note +
@@ -848,73 +904,98 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "CallBackApiAccountTransactions")]
         public ActionResult CallBackApiHash(int? transid)
         {
-            var _calbackUrl = db.CallbackUrl.FirstOrDefault();
             AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
-            string _url;
-            if (accountTransactions.IsMoneyTransfer == true)
+            
+            try
             {
-                if (accountTransactions.Deposit == true)
+                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                string _url;
+                if (accountTransactions.IsMoneyTransfer == true)
                 {
-                    TempData["warning"] = "Callback api çalışmadı.";
-                    return RedirectToAction("Deposit");
+                    if (accountTransactions.Deposit == true)
+                    {
+                        TempData["warning"] = "Callback api çalışmadı.";
+                        return RedirectToAction("Deposit");
+                    }
+                    else
+                    {
+                        TempData["warning"] = "Callback api çalışmadı.";
+                        return RedirectToAction("Draw");
+                    }
                 }
                 else
                 {
-                    TempData["warning"] = "Callback api çalışmadı.";
-                    return RedirectToAction("Draw");
-                }
-            }
-            else
-            {
-                //_url = "http://payments1.betconstruct.com/Bets/PaymentsCallback/Pp_Pro_PaparaPG/PayResult.php";
-                _url = _calbackUrl.Papara;
-            }
-            string data = GetCallBackApiHashData(transid);
-            WebRequest request = WebRequest.Create(_url);
-            request.Method = "POST";
-            request.ContentType = "application/x-www-form-urlencoded";
-            string postData = data;
-            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
-            request.ContentLength = byteArray.Length;
-            Stream dataStream = request.GetRequestStream();
-            dataStream.Write(byteArray, 0, byteArray.Length);
-            dataStream.Close();
 
-            WebResponse response = request.GetResponse();
-            using (dataStream = response.GetResponseStream())
-            {
-                try
-                {
-                    StreamReader reader = new StreamReader(dataStream);
-                    string responseFromServer = reader.ReadToEnd();
-                    //dynamic result = JObject.Parse(responseFromServer);
-                    //JsonObjectViewModel jsonObject = new JsonObjectViewModel
-                    //{
-                    //    type = result.type,
-                    //    message = result.status + " | " + result.message
-                    //};
-
-                    accountTransactions.ResponseDate = DateTime.Now;
-                    accountTransactions.ResponseType = "json";
-                    accountTransactions.ResponseMessage = responseFromServer;
-                    db.SaveChanges();
-                }
-                catch (Exception ex)
-                {
-                    JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                    if (accountTransactions.Deposit == false)
                     {
-                        type = "error",
-                        message = ex.Message
-                    };
-
-                    accountTransactions.ResponseDate = DateTime.Now;
-                    accountTransactions.ResponseType = jsonObject.type;
-                    accountTransactions.ResponseMessage = jsonObject.message;
-                    db.SaveChanges();
+                        //_url = "http://payments1.betconstruct.com/Bets/PaymentsCallback/Pp_Pro_PaparaPG/PayOut.php"
+                        _url = _callbackUrl.PaparaDraw;
+                    }
+                    else
+                    {
+                        //_url = "http://payments1.betconstruct.com/Bets/PaymentsCallback/Pp_Pro_PaparaPG/PayResult.php";
+                        _url = _callbackUrl.PaparaDeposit;
+                    }
                 }
+                string data = GetCallBackApiHashData(transid);
+                WebRequest request = WebRequest.Create(_url);
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                string postData = data;
+                byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+                request.ContentLength = byteArray.Length;
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
 
-                response.Close();
+                WebResponse response = request.GetResponse();
+                using (dataStream = response.GetResponseStream())
+                {
+                    try
+                    {
+                        StreamReader reader = new StreamReader(dataStream);
+                        string responseFromServer = reader.ReadToEnd();
+                        //dynamic result = JObject.Parse(responseFromServer);
+                        //JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        //{
+                        //    type = result.type,
+                        //    message = result.status + " | " + result.message
+                        //};
 
+                        accountTransactions.ResponseDate = DateTime.Now;
+                        accountTransactions.ResponseType = "json";
+                        accountTransactions.ResponseMessage = responseFromServer;
+                        db.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = ex.Message
+                        };
+
+                        accountTransactions.ResponseDate = DateTime.Now;
+                        accountTransactions.ResponseType = jsonObject.type;
+                        accountTransactions.ResponseMessage = jsonObject.message;
+                        db.SaveChanges();
+                    }
+
+                    response.Close();
+
+                    if (accountTransactions.Deposit == true)
+                    {
+                        return RedirectToAction("Deposit");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Draw");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["warning"] = ex.Message;
                 if (accountTransactions.Deposit == true)
                 {
                     return RedirectToAction("Deposit");
@@ -1033,6 +1114,247 @@ namespace QFinans.Controllers
                     "&status=reject";
 
                 string salt = "reference,username,name,surname,type,message,amount,status";
+
+                string data = transaction + salt;
+
+                using (SHA1 sha1Hash = SHA1.Create())
+                {
+                    //From String to byte array
+                    byte[] sourceBytes = Encoding.UTF8.GetBytes(data);
+                    byte[] hashBytes = sha1Hash.ComputeHash(sourceBytes);
+                    string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+
+                    string query = transaction + "&hash=" + hash.ToLower();
+                    return query;
+                }
+
+                //return transaction;
+            }
+            else
+            {
+                string transaction = "";
+                return transaction;
+            }
+        }
+
+        [CustomAuth(Roles = "CallBackApiAccountTransactions")]
+        public ActionResult CallBackApiHashForPppropanel(int? transid)
+        {
+            AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
+
+            try
+            {
+                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                
+                string _url;
+                if (accountTransactions.IsMoneyTransfer == true)
+                {
+                    if (accountTransactions.Deposit == true)
+                    {
+                        TempData["warning"] = "Callback api çalışmadı.";
+                        return RedirectToAction("Deposit");
+                    }
+                    else
+                    {
+                        TempData["warning"] = "Callback api çalışmadı.";
+                        return RedirectToAction("Draw");
+                    }
+                }
+                else
+                {
+
+                    if (accountTransactions.Deposit == false)
+                    {
+                        //_url = "http://payments1.betconstruct.com/Bets/PaymentsCallback/Pp_Pro_PaparaPG/PayOut.php"
+                        _url = _callbackUrl.PaparaDraw;
+                    }
+                    else
+                    {
+                        //_url = "http://payments1.betconstruct.com/Bets/PaymentsCallback/Pp_Pro_PaparaPG/PayResult.php";
+                        _url = _callbackUrl.PaparaDeposit;
+                    }
+                }
+                string data = GetCallBackApiHashDataForPppropanel(transid);
+                WebRequest request = WebRequest.Create(_url);
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                string postData = data;
+                byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+                request.ContentLength = byteArray.Length;
+                Stream dataStream = request.GetRequestStream();
+                dataStream.Write(byteArray, 0, byteArray.Length);
+                dataStream.Close();
+
+                WebResponse response = request.GetResponse();
+                using (dataStream = response.GetResponseStream())
+                {
+                    try
+                    {
+                        StreamReader reader = new StreamReader(dataStream);
+                        string responseFromServer = reader.ReadToEnd();
+                        //dynamic result = JObject.Parse(responseFromServer);
+                        //JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        //{
+                        //    type = result.type,
+                        //    message = result.status + " | " + result.message
+                        //};
+
+                        accountTransactions.ResponseDate = DateTime.Now;
+                        accountTransactions.ResponseType = "json";
+                        accountTransactions.ResponseMessage = responseFromServer;
+                        db.SaveChanges();
+                    }
+                    catch (Exception ex)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = ex.Message
+                        };
+
+                        accountTransactions.ResponseDate = DateTime.Now;
+                        accountTransactions.ResponseType = jsonObject.type;
+                        accountTransactions.ResponseMessage = jsonObject.message;
+                        db.SaveChanges();
+                    }
+
+                    response.Close();
+
+                    if (accountTransactions.Deposit == true)
+                    {
+                        return RedirectToAction("Deposit");
+                    }
+                    else
+                    {
+                        return RedirectToAction("Draw");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["warning"] = ex.Message;
+                if (accountTransactions.Deposit == true)
+                {
+                    return RedirectToAction("Deposit");
+                }
+                else
+                {
+                    return RedirectToAction("Draw");
+                }
+            }
+        }
+
+        private string GetCallBackApiHashDataForPppropanel(int? id)
+        {
+            NumberFormatInfo nfi = new NumberFormatInfo();
+            nfi.NumberDecimalSeparator = ".";
+
+            AccountTransactions at = db.AccountTransactions.Find(id);
+            if (at.TransactionStatus == TransactionStatus.Confirm && at.Deposit == true)
+            {
+                string transaction =
+                    "id=" + at.Id +
+                    "&username=" + at.UserName +
+                    "&name=" + at.Name +
+                    "&middleName=" + at.MiddleName +
+                    "&surname=" + at.SurName +
+                    "&type=deposit" +
+                    "&message=" + at.Note +
+                    "&amount=" + at.Amount.ToString(nfi) +
+                    "&status=success";
+
+                string salt = "id,username,name,middleName,surname,type,message,amount,status";
+
+                string data = transaction + salt;
+
+                using (SHA1 sha1Hash = SHA1.Create())
+                {
+                    //From String to byte array
+                    byte[] sourceBytes = Encoding.UTF8.GetBytes(data);
+                    byte[] hashBytes = sha1Hash.ComputeHash(sourceBytes);
+                    string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+
+                    string query = transaction + "&hash=" + hash.ToLower();
+                    return query;
+                }
+
+                //return transaction;
+            }
+            else if (at.TransactionStatus == TransactionStatus.Deny && at.Deposit == true)
+            {
+                string transaction =
+                    "id=" + at.Id +
+                    "&username=" + at.UserName +
+                    "&name=" + at.Name +
+                    "&middleName=" + at.MiddleName +
+                    "&surname=" + at.SurName +
+                    "&type=deposit" +
+                    "&message=" + at.Note +
+                    "&amount=" + at.Amount.ToString(nfi) +
+                    "&status=reject";
+
+                string salt = "id,username,name,middleName,surname,type,message,amount,status";
+
+                string data = transaction + salt;
+
+                using (SHA1 sha1Hash = SHA1.Create())
+                {
+                    //From String to byte array
+                    byte[] sourceBytes = Encoding.UTF8.GetBytes(data);
+                    byte[] hashBytes = sha1Hash.ComputeHash(sourceBytes);
+                    string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+
+                    string query = transaction + "&hash=" + hash.ToLower();
+                    return query;
+                }
+
+                //return transaction;
+            }
+            else if (at.TransactionStatus == TransactionStatus.Confirm && at.Deposit == false)
+            {
+                string transaction =
+                    "id=" + at.Id +
+                    "&username=" + at.UserName +
+                    "&name=" + at.Name +
+                    "&middleName=" + at.MiddleName +
+                    "&surname=" + at.SurName +
+                    "&type=draw" +
+                    "&message=" + at.Note +
+                    "&amount=" + at.Amount.ToString(nfi) +
+                    "&status=success";
+
+                string salt = "id,username,name,middleName,surname,type,message,amount,status";
+
+                string data = transaction + salt;
+
+                using (SHA1 sha1Hash = SHA1.Create())
+                {
+                    //From String to byte array
+                    byte[] sourceBytes = Encoding.UTF8.GetBytes(data);
+                    byte[] hashBytes = sha1Hash.ComputeHash(sourceBytes);
+                    string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+
+                    string query = transaction + "&hash=" + hash.ToLower();
+                    return query;
+                }
+
+                //return transaction;
+            }
+
+            else if (at.TransactionStatus == TransactionStatus.Deny && at.Deposit == false)
+            {
+                string transaction =
+                    "id=" + at.Id +
+                    "&username=" + at.UserName +
+                    "&name=" + at.Name +
+                    "&middleName=" + at.MiddleName +
+                    "&surname=" + at.SurName +
+                    "&type=draw" +
+                    "&message=" + at.Note +
+                    "&amount=" + at.Amount.ToString(nfi) +
+                    "&status=reject";
+
+                string salt = "id,username,name,middleName,surname,type,message,amount,status";
 
                 string data = transaction + salt;
 

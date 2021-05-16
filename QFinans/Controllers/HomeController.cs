@@ -3,6 +3,7 @@ using QFinans.Areas.Api.Models;
 using QFinans.CustomFilters;
 using QFinans.Hubs;
 using QFinans.Models;
+using QFinans.Repostroies;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -25,10 +26,18 @@ namespace QFinans.Controllers
         {
             DateTime startDate = DateTime.Now.Date;
             DateTime endDate = DateTime.Now.AddDays(1).Date;
-            var deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate < endDate);
-            var draw = db.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate < endDate);
+           
             var account = db.AccountInfo.Where(x => x.IsDeleted == false);
-            var accountTransactions = db.AccountTransactions.Where(x => x.AddDate >= startDate && x.AddDate < endDate);
+            var accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+            var deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+            var draw = db.AccountTransactions.Where(x => x.Deposit == false && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+
+            if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+            {
+                accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+                deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+                draw = db.AccountTransactions.Where(x => x.Deposit == false && x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+            }
 
             ViewBag.DepositCount = deposit.Count();
             ViewBag.NewDepositCount = deposit.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
@@ -53,7 +62,7 @@ namespace QFinans.Controllers
             ViewBag.CashInSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
             ViewBag.CashOutSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
 
-            ViewBag.DepositFreeSum = db.AccountTransactions.Where(x => x.Deposit == true && x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.DepositFreeSum = deposit.Where(x => x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
             ViewBag.CashInFreeSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == true && x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
 
             var activeAccountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false).OrderByDescending(x => x.Id).ToList();
@@ -75,10 +84,15 @@ namespace QFinans.Controllers
         {
             DateTime startDate = DateTime.Now.Date;
             DateTime endDate = DateTime.Now.AddDays(1).Date;
-            var deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate < endDate);
-            var draw = db.AccountTransactions.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate < endDate);
+            var deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+            var draw = db.AccountTransactions.Where(x => x.Deposit == false && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
             var account = db.AccountInfo.Where(x => x.IsDeleted == false);
-            //var accountTransactions = db.AccountTransactions.Where(x => x.AddDate >= startDate && x.AddDate < endDate);
+
+            if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+            {
+                deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+                draw = db.AccountTransactions.Where(x => x.Deposit == false && x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
+            }
 
             ViewBag.DepositCount = deposit.Count();
             ViewBag.NewDepositCount = deposit.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
@@ -99,7 +113,7 @@ namespace QFinans.Controllers
             ViewBag.CashInSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
             ViewBag.CashOutSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
 
-            ViewBag.DepositFreeSum = db.AccountTransactions.Where(x => x.Deposit == true && x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.DepositFreeSum = deposit.Where(x => x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
             ViewBag.CashInFreeSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == true && x.IsFree == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
 
             ViewBag.ActivePaparaCount = account.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).OrderByDescending(x => x.OrderNumber).ThenByDescending(x => x.Id).Count();
@@ -141,17 +155,25 @@ namespace QFinans.Controllers
         public JsonResult GetBalanceJsonData()
         {
             IQueryable<AccountInfo> accountInfo = db.AccountInfo.Where(a => a.IsDeleted == false);
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.IsMoneyTransfer == false && x.TransactionStatus == TransactionStatus.Confirm);
+
+            if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+            {
+                accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.AddUserId == "user_api" && x.IsMoneyTransfer == false && x.TransactionStatus == TransactionStatus.Confirm);
+            }
 
             BalanceViewModel balanceViewModel = new BalanceViewModel
             {
-                ConfirmDepositSum = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum(),
-                ConfirmDrawSum = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum(),
+                ConfirmDepositSum = accountTransactions.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum(),
+                ConfirmDrawSum = accountTransactions.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum(),
 
                 InitialBalance = db.SystemParameters.Select(x => x.InitialBalance).DefaultIfEmpty(0).FirstOrDefault(),
                 BalanceEditAmount = db.SystemParameters.Select(x => x.BalanceEditAmount).DefaultIfEmpty(0).FirstOrDefault(),
                 BankCharge = db.SystemParameters.Select(x => x.BankCharge).DefaultIfEmpty(0).FirstOrDefault(),
 
                 Safe = accountInfo.Select(x => x.Balance).DefaultIfEmpty(0).Sum() ?? 0
+                //Safe = accountTransactions.Where(x => x.Deposit == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
+                //       + accountTransactions.Where(x => x.Deposit == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
             };
             return Json(balanceViewModel, JsonRequestBehavior.AllowGet);
         }
@@ -355,6 +377,26 @@ namespace QFinans.Controllers
             {
                 NotificationHub.Show();
             }
+        }
+
+        [AllowAnonymous]
+        public ActionResult GetQR(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            AccountTransactions accountTransactions = db.AccountTransactions.Find(id);
+            if (accountTransactions == null)
+            {
+                return HttpNotFound();
+            }
+
+            CustomFunctions _qr = new CustomFunctions();
+            var _qrImgSrc = _qr.GenerateQR("https://www.papara.com/personal/qr?accountNumber=" + accountTransactions.AccountInfo.AccountNumber + "&currency=0&amount=" + Math.Round(accountTransactions.Amount));
+            ViewBag.Qr = _qrImgSrc;
+
+            return View();
         }
 
         protected override void Dispose(bool disposing)

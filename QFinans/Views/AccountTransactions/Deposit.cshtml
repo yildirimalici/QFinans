@@ -14,6 +14,17 @@
     var _cashOutAll = db.CashFlow.Where(c => c.IsDeleted == false && c.IsCashIn == false);
     var _timeNow = DateTime.Now.AddMinutes(-30);
     var _lastOneHourDeposit = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= _timeNow).ToList();
+    var _accountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false).ToList();
+
+    if (ViewBag.CurrentDateFrom != null)
+    {
+        ViewBag.CurrentDateFrom = ViewBag.CurrentDateFrom.ToString("yyyy-MM-dd");
+    }
+
+    if (ViewBag.CurrentDateTo != null)
+    {
+        ViewBag.CurrentDateTo = ViewBag.CurrentDateTo.ToString("yyyy-MM-dd");
+    }
 }
 
 <div class="card">
@@ -29,8 +40,8 @@
         @using (Html.BeginForm("Deposit", "AccountTransactions", FormMethod.Get, new { @id = "formSearch" }))
         {
             <div class="row mb-4 align-items-end">
-                <div class="col">
-                    <select class="custom-select custom-select-sm mr-2" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
+                <div class="col-xl-2">
+                    <select class="custom-select mr-2" id="selectPageSize" name="CustomPageSize" onchange="getPageSize()" style="width:80px;">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -39,40 +50,53 @@
                     </select>
                 </div>
 
-                <div class="col-xl-2">
-                    <label>Durum</label>
-                    <select class="custom-select custom-select-sm" id="transactionStatus" name="transactionStatus">
+                <div class="col-xl-4">
+                    <label>Hesap</label>
+                    <select class="custom-select select2" id="accountInfoId" name="accountInfoId">
                         <option selected>Seçiniz</option>
+                        @foreach (var item in _accountInfo)
+                        {
+                            <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-xl-4">
+                    <label>Durum</label>
+                    <select class="custom-select" id="transactionStatus" name="transactionStatus">
+                        <option>Seçiniz</option>
                         <option value="1">Yeni</option>
                         <option value="2">Onay</option>
                         <option value="3">Red</option>
                     </select>
                 </div>
 
+            </div>
+
+            <div class="row mb-4 align-items-end">
                 <div class="col-xl-4">
                     <div class="row">
                         <div class="col-md-6">
                             <label>Başlangıç</label>
-                            @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                            @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control", @Type = "date" })
                         </div>
                         <div class="col-md-6">
                             <label>Bitiş</label>
-                            @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                            @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control", @Type = "date" })
                         </div>
                     </div>
                 </div>
 
-                <div class="col-xl-3">
+                <div class="col-xl-4">
                     <div>
                         <label>Arama kelimesi</label>
-                        @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control form-control-sm", @placeholder = "Arama yapmak için bir kelime yazın" })
+                        @Html.TextBox("SearchString", ViewBag.CurrentFilter as string, new { @class = "form-control", @placeholder = "Arama yapmak için bir kelime yazın" })
                     </div>
                 </div>
 
-                <div class="col-md-auto float-right">
+                <div class="col-xl-2 float-right">
                     <button class="btn btn-sm btn-info" type="submit"><i class="fas fa-search"></i> Ara</button>
                 </div>
-
             </div>
         }
 
@@ -129,7 +153,7 @@
                             }
                         </td>
                         <td id="userName-@item.Id">
-                            @if (_lastOneHourDeposit.Where(x => x.UserName == item.UserName).Count()>=2 && _lastOneHourDeposit.Any(x => x.Id == item.Id))
+                            @if (_lastOneHourDeposit.Where(x => x.UserName == item.UserName).Count() >= 2 && _lastOneHourDeposit.Any(x => x.Id == item.Id))
                             {
                                 <i class="far fa-clock text-white"></i>
                             }
@@ -177,7 +201,7 @@
                                         </span>
                                     </span>
                                     <span class="d-block">
-                                        <span class="badge badge-secondary" data-toggle="tooltip" data-placement="bottom" title="Hesap Bakiyesi">
+                                        <span class="badge badge-secondary" data-toggle="tooltip" data-placement="bottom" title="Hesap Bakiyesi" style="font-size:14px">
                                             @((db.AccountTransactions.Where(x => x.Deposit == true && x.AccountInfoId == item.AccountInfoId && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
 
                                         - db.AccountTransactions.Where(x => x.Deposit == false && x.AccountInfoId == item.AccountInfoId && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm && x.DrawSplit.Where(d => d.IsDeleted == false && d.AccountInfoId == item.AccountInfoId).Count() == 0).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
@@ -255,7 +279,7 @@
                 <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
             </div>
             <div class="col-sm-10">
-                @Html.PagedListPager(Model, page => Url.Action("Deposit", "AccountTransactions", new { page = page, currentFilter = ViewBag.CurrentFilter })
+                @Html.PagedListPager(Model, page => Url.Action("Deposit", "AccountTransactions", new { page = page, currentFilter = ViewBag.CurrentFilter, currentDateFrom = ViewBag.CurrentDateFrom, currentDateTo = ViewBag.CurrentDateTo, currentTransactionStatus = ViewBag.CurrentTransactionStatus, currentAccountInfoId = ViewBag.CurrentAccountInfoId })
                                                                             , new PagedListRenderOptions
                                                                             {
                                                                                 UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
@@ -361,6 +385,14 @@
         </script>
     }
     <script>
+        $(document).ready(function () {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+            });
+        });
+
+        $("#accountInfoId").val(@ViewBag.CurrentAccountInfoId);
+
         setInterval(function () {
             window.location.reload(1);
         }, 120000);

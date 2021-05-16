@@ -24,5 +24,7 @@ namespace QFinans.Areas.Api.Models
         public string WhiteIsTip { get; set; }
 
         public string Job { get; set; }
+
+        public string Organization { get; set; }
     }
 }

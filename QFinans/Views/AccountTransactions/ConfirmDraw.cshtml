@@ -31,7 +31,16 @@
                         <dd class="col-md-9">@Html.DisplayFor(model => model.Name) @Html.DisplayFor(model => model.SurName)</dd>
 
                         <dt class="col-md-3">@Html.DisplayNameFor(model => model.CustomerAccountNumber)</dt>
-                        <dd class="col-md-9">@Html.DisplayFor(model => model.CustomerAccountNumber)</dd>
+                        <dd class="col-md-9">
+                            @if(Model.IsCoin == true)
+                            {
+                            <span>@Html.DisplayFor(model => model.CustomerWalletAddress)</span>
+                            }
+                            else
+                            {
+                                <span>@Html.DisplayFor(model => model.CustomerAccountNumber)</span>
+                            }
+                        </dd>
 
                         <dt class="col-md-3">@Html.DisplayNameFor(model => model.Amount)</dt>
                         <dd class="col-md-9" style="font-size:18px">

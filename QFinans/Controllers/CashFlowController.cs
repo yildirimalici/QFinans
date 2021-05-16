@@ -50,7 +50,7 @@ namespace QFinans.Controllers
 
             if (_user.IsAdmin == false)
             {
-                cashFlow = cashFlow.Where(x => x.AddUserId == _userId && x.TransactionDate >= startDate && x.TransactionDate <= endDate);
+                cashFlow = cashFlow.Where(x => (x.AddUserId == _userId || x.CashFlowType.IsOtherUserSee == true) && x.TransactionDate >= startDate && x.TransactionDate <= endDate);
             } 
 
             if (accountInfoId != null) { page = 1; } else { accountInfoId = currentAccountInfoId; }
@@ -260,8 +260,12 @@ namespace QFinans.Controllers
         public ActionResult AddTransfer(int fromAccountInfoId, int toAccountInfoId, DateTime transactionDate, decimal amount, bool isFree, string explanation)
         {
             string _userId = User.Identity.GetUserId();
+            
             try
             {
+                var _toAccountInfo = db.AccountInfo.Find(toAccountInfoId);
+                var _fromAccountInfo = db.AccountInfo.Find(fromAccountInfoId);
+
                 using (var context = new ApplicationDbContext())
                 {
                     CashFlow cashFlowFrom = new CashFlow();
@@ -271,7 +275,7 @@ namespace QFinans.Controllers
                     cashFlowFrom.IsCashIn = false;
                     cashFlowFrom.Amount = amount;
                     cashFlowFrom.IsFree = false;
-                    cashFlowFrom.Explanation = explanation;
+                    cashFlowFrom.Explanation = "(" + _toAccountInfo.Id.ToString() + " " + _toAccountInfo.Name + " " + _toAccountInfo.SurName + " - " + _toAccountInfo.AccountNumber.ToString() + ") " + explanation;
                     cashFlowFrom.AddUserId = _userId;
                     cashFlowFrom.AddDate = DateTime.Now;
                     context.CashFlow.Add(cashFlowFrom);
@@ -287,7 +291,7 @@ namespace QFinans.Controllers
                     cashFlowTo.IsCashIn = true;
                     cashFlowTo.Amount = amount;
                     cashFlowTo.IsFree = isFree;
-                    cashFlowTo.Explanation = explanation;
+                    cashFlowTo.Explanation = "(" + _fromAccountInfo.Id.ToString() + " " + _fromAccountInfo.Name + " " + _fromAccountInfo.SurName + " - " + _fromAccountInfo.AccountNumber.ToString() + ") " + explanation;
                     cashFlowTo.AddUserId = _userId;
                     cashFlowTo.AddDate = DateTime.Now;
                     context.CashFlow.Add(cashFlowTo);

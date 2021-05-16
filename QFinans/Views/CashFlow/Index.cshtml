@@ -207,7 +207,7 @@
                             @String.Format("{0:N0}", item.Amount)
                         </td>
                         <td>
-                            @if (item.AddUserId == "user_bot")
+                            @if (item.AddUserId == "user_bot" || item.IsTransfer == true)
                             {
                                 <span>@Html.DisplayFor(modelItem => item.Explanation)</span>
                             }
@@ -228,11 +228,11 @@
 
                         @if (item.IsCashIn == true)
                         {
-                            <td><span class="badge badge-success">Cash In</span></td>
+                            <td><span class="badge badge-success">Giriş</span></td>
                         }
                         else
                         {
-                            <td><span class="badge badge-danger">Cash Out</span></td>
+                            <td><span class="badge badge-danger">Çıkış</span></td>
                         }
                         <td>
                             <a class="btn btn-xs btn-info" href="@Url.Action("Details", "CashFlow", new { id = item.Id })" title="Detay"><i class="fas fa-search-plus"></i></a>

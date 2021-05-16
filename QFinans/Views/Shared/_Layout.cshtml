@@ -1,12 +1,18 @@
 ﻿@using QFinans.Models;
+@using QFinans.Areas.Api.Models;
 @using Microsoft.AspNet.Identity
 @{
     ApplicationDbContext db = new ApplicationDbContext();
     var _user = db.Users.Find(User.Identity.GetUserId());
     DateTime startDate = DateTime.Now.Date;
     DateTime endDate = DateTime.Now.AddDays(1).Date;
-    var newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
-    var newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+    var newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false).Count();
+    var newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false).Count();
+    if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+    {
+        newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false && x.AddUserId == "user_api").Count();
+        newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false && x.AddUserId == "user_api").Count();
+    }
 
     var _activePaparaCount = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).Count();
 
@@ -14,7 +20,9 @@
 
     var _activeAccountCount = _activePaparaCount + _activeBankCount;
 
-    var emergencyAccountId = db.SystemParameters.Select(x => (x.EmergencyAccountId == null ? 337 : x.EmergencyAccountId)).FirstOrDefault();
+    var emergencyAccountId = db.SystemParameters.Select(x => (x.EmergencyAccountId == null ? null : x.EmergencyAccountId)).FirstOrDefault();
+
+    var _organization = db.ApiUsers.Where(x => x.Job == null).ToList();
 }
 <!DOCTYPE html>
 <html class="h-100">
@@ -104,7 +112,11 @@
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 @if (User.IsInRole("IndexReport"))
                                 {
-                                    <a class="dropdown-item" href="@Url.Action("Index", "Report")">Günlük İşlem Raporu</a>
+                                    foreach (var item in _organization)
+                                    {
+                                        <a class="dropdown-item" href="@Url.Action("Index", "Report", new { organization = item.Organization })">Günlük İşlem Raporu @item.Organization</a>
+                                    }
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Report", new { organization = "Coinbase" })">Günlük İşlem Raporu Coinbase</a>
                                 }
 
                                 @if (User.IsInRole("MonthlyReport"))

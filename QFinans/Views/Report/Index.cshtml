@@ -18,20 +18,23 @@
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">Günlük İşlem Raporu</h5>
+        <h5 class="card-title">Günlük İşlem Raporu @ViewBag.CurrentOrganization</h5>
         <hr />
 
         @using (Html.BeginForm("Index", "Report", FormMethod.Get, new { @id = "formSearch" }))
         {
+            <input name="Organization" type="hidden" value="@ViewBag.CurrentOrganization">
             <div class="row mb-4 align-items-end">
-                 <div class="col-md-5">
-                        <label>Başlangıç</label>
-                        @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control form-control-sm", @Type = "date" })
-                    </div>
-                    <div class="col-md-5">
-                        <label>Bitiş</label>
-                        @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
-                    </div>
+                <div class="col-md-5">
+                    <label>Başlangıç</label>
+                    @Html.TextBox("DateFrom", ViewBag.CurrentDateFrom as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                </div>
+                <div class="col-md-5">
+                    <label>Bitiş</label>
+                    @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
+                </div>
+
+                
 
                 <div class="col-md-2">
                     <div class="d-flex flex-row-reverse">
@@ -78,6 +81,4 @@
         </div>
     </div>
 </div>
-
-
 

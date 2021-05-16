@@ -17,6 +17,12 @@ namespace QFinans.Areas.Api.Models
         [Display(Name = "Açıklama Gerekli mi?")]
         public bool IsExplanationRequired { get; set; }
 
+        [Display(Name = "Diğer Kullanıcılar Görsün mü?")]
+        public bool IsOtherUserSee { get; set; }
+
+        [Display(Name = "İşlem Sayısına Dahil Edilsin mi?")]
+        public bool IsTransactionCount { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public string AddUserId { get; set; }

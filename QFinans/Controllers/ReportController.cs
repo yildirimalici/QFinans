@@ -17,14 +17,36 @@ namespace QFinans.Controllers
 
         [CustomAuth(Roles = "IndexReport")]
         // GET: Report
-        public ActionResult Index(DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo)
+        public ActionResult Index(DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo, string organization, string currentOrganization)
         {
             if (currentDateFrom == null)
             {
                 currentDateFrom = DateTime.Now.AddMonths(-1).Date;
             }
 
-            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions;
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.IsMoneyTransfer == false);
+
+
+
+            IQueryable<ApiUsers> _organization = db.ApiUsers.Where(x => x.Job == null);
+            ViewBag.OrganizationList = _organization.ToList();
+
+            if (organization == null)
+            {
+                organization = _organization.FirstOrDefault().Organization;
+                accountTransactions = accountTransactions.Where(x => x.IsCoin == false && x.AddUserId == _organization.FirstOrDefault().UserName);
+            }
+            else if (organization == "Coinbase")
+            {
+                organization = "Coinbase";
+                accountTransactions = accountTransactions.Where(x => x.IsCoin == true);
+            }
+            else
+            {
+                string _organizationUsername = _organization.Where(x => x.Organization == organization).FirstOrDefault().UserName;
+                accountTransactions = accountTransactions.Where(x => x.IsCoin == false && x.AddUserId == _organizationUsername);
+            }
+            ViewBag.CurrentOrganization = organization;
 
             if (dateFrom == null) { dateFrom = currentDateFrom; }
             ViewBag.CurrentDateFrom = dateFrom;
@@ -94,7 +116,14 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "MonthlyReport")]
         public ActionResult Monthly()
         {
-            var data = db.AccountTransactions.OrderByDescending(x => x.AddDate).Select(x => new DailyTansactionReportViewModel
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.IsMoneyTransfer == false);
+
+            if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+            {
+                accountTransactions = db.AccountTransactions.Where(x => x.AddUserId == "user_api");
+            }
+
+            var data = accountTransactions.OrderByDescending(x => x.AddDate).Select(x => new DailyTansactionReportViewModel
             {
                 Id = x.Id,
                 Year = x.AddDate.Year,
@@ -152,7 +181,14 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "BalanceReport")]
         public ActionResult Balance()
         {
-            var data = db.AccountTransactions.OrderByDescending(x => x.AddDate).Select(x => new DailyTansactionReportViewModel
+            IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.IsMoneyTransfer == false);
+
+            if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
+            {
+                accountTransactions = db.AccountTransactions.Where(x => x.AddUserId == "user_api");
+            }
+
+            var data = accountTransactions.OrderByDescending(x => x.AddDate).Select(x => new DailyTansactionReportViewModel
             {
                 Id = x.Id,
                 Year = x.AddDate.Year,

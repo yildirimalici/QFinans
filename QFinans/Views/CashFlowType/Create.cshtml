@@ -32,6 +32,26 @@
                 </div>
             </div>
 
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsOtherUserSee, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.IsOtherUserSee, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.IsOtherUserSee, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsTransactionCount, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.IsTransactionCount, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.IsTransactionCount, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
             <hr />
             <a class="btn btn-sm btn-info" href="@Url.Action("Index", "CashFlowType")"><i class="fas fa-arrow-circle-left"></i> Geri Dön</a>
             <button type="submit" class="btn btn-sm btn-success"><i class="fas fa-save"></i> Kaydet</button>

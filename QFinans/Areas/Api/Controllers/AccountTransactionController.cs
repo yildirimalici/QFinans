@@ -11,11 +11,12 @@ using Newtonsoft.Json.Linq;
 using QFinans.Areas.Api.Models;
 using QFinans.CustomFilters;
 using QFinans.Models;
+using QFinans.Repostroies;
 
 namespace QFinans.Areas.Api.Controllers
 {
     //[Authorize]
-    [Log]
+    [LogJson]
     public class AccountTransactionController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -51,7 +52,7 @@ namespace QFinans.Areas.Api.Controllers
                     NumberFormatInfo nfi = new NumberFormatInfo();
                     nfi.NumberDecimalSeparator = ".";
 
-                    var userDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName && x.Amount == depositViewModel.Amount).Count();
+                    var userDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName).Count();
                     if (userDepositCount > 0)
                     {
                         JsonObjectViewModel jsonObject = new JsonObjectViewModel
@@ -74,7 +75,7 @@ namespace QFinans.Areas.Api.Controllers
                         var accountInfos = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false
 
                                                                 && x.AccountInfoType.TransactionLimit > (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate && (t.TransactionStatus == TransactionStatus.New || t.TransactionStatus == TransactionStatus.Confirm)).Count()
-                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate).Count())
+                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)).Count())
 
                                                                 && x.AccountInfoType.AmountLimit > (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate && (t.TransactionStatus != TransactionStatus.Deny)).Select(t => t.Amount).DefaultIfEmpty(0).Sum()
                                                                 + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate).Select(a => a.Amount).DefaultIfEmpty(0).Sum()
@@ -85,7 +86,7 @@ namespace QFinans.Areas.Api.Controllers
 
                         var freeAccountInfo = accountInfos.Where(x => x.AccountAmountRedirectId == null && (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate
                                                             && (t.TransactionStatus == TransactionStatus.New || t.TransactionStatus == TransactionStatus.Confirm)).Count()
-                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate).Count()) < freeTransactionNumber
+                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)).Count()) < freeTransactionNumber
 
                                                             ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
@@ -112,6 +113,7 @@ namespace QFinans.Areas.Api.Controllers
                             {
                                 accountTransactions.UserName = depositViewModel.UserName;
                                 accountTransactions.Name = depositViewModel.Name;
+                                accountTransactions.MiddleName = depositViewModel.MiddleName;
                                 accountTransactions.SurName = depositViewModel.SurName;
                                 accountTransactions.Amount = depositViewModel.Amount;
                                 accountTransactions.OldAmount = depositViewModel.Amount;
@@ -177,6 +179,8 @@ namespace QFinans.Areas.Api.Controllers
                         }
 
 
+                        string _qr_url = "https://" + Request.Url.Host + "/Home/GetQR/" + accountTransactions.Id.ToString();
+
                         var data = (from h in db.AccountTransactions
                                     where h.Id == accountTransactions.Id
                                     select new
@@ -184,12 +188,14 @@ namespace QFinans.Areas.Api.Controllers
                                         id = h.Id,
                                         userName = h.UserName,
                                         name = h.Name,
+                                        middleName = h.MiddleName,
                                         surName = h.SurName,
                                         amount = h.Amount,
                                         accountNumber = h.AccountInfo.AccountNumber,
                                         accountName = h.AccountInfo.Name,
                                         accountSurName = h.AccountInfo.SurName,
-                                        reference = h.Reference
+                                        reference = h.Reference,
+                                        qrUrl = _qr_url
                                     });
 
                         return Json(data.First());
@@ -256,6 +262,7 @@ namespace QFinans.Areas.Api.Controllers
                             {
                                 accountTransactions.UserName = drawViewModel.UserName;
                                 accountTransactions.Name = drawViewModel.Name;
+                                accountTransactions.MiddleName = drawViewModel.MiddleName;
                                 accountTransactions.SurName = drawViewModel.SurName;
                                 accountTransactions.Amount = drawViewModel.Amount;
                                 accountTransactions.OldAmount = drawViewModel.Amount;
@@ -277,6 +284,7 @@ namespace QFinans.Areas.Api.Controllers
                                             id = h.Id,
                                             userName = h.UserName,
                                             name = h.Name,
+                                            middleName = h.MiddleName,
                                             surName = h.SurName,
                                             amount = h.Amount,
                                             customerAccountNumber = h.CustomerAccountNumber,
