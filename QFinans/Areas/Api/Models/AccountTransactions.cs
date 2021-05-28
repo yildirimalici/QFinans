@@ -17,7 +17,7 @@ namespace QFinans.Areas.Api.Models
         [Display(Name = "İsim")]
         public string Name { get; set; }
 
-        [Display(Name = "İsim")]
+        [Display(Name = "İkinci İsim")]
         public string MiddleName { get; set; }
 
         [Required]

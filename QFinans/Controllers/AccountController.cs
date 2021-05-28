@@ -162,7 +162,7 @@ namespace QFinans.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, IsAdmin = model.IsAdmin };
+                var user = new ApplicationUser { UserName = model.Email, Email = model.Email, Name = model.Name, SurName = model.SurName, IsAdmin = model.IsAdmin, PaparaDashboard = model.PaparaDashboard, HavaleEFtDashboard = model.HavaleEftDashboard, IsShowCashFlow = model.IsShowCashFlow };
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {

@@ -131,7 +131,7 @@ namespace QFinans.Controllers
         [HttpPost]
         [CustomAuth(Roles = "EditAppUser")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(string id, string name, string surName, bool isAdmin, string[] roleName)
+        public ActionResult Edit(string id, string name, string surName, bool isAdmin, bool paparaDashboard, bool havaleEftDashboard, bool isShowCashFlow, string[] roleName)
         {
             if (string.IsNullOrEmpty(id))
             {
@@ -160,6 +160,9 @@ namespace QFinans.Controllers
                     user.Name = name;
                     user.SurName = surName;
                     user.IsAdmin = isAdmin;
+                    user.PaparaDashboard = paparaDashboard;
+                    user.HavaleEFtDashboard = havaleEftDashboard;
+                    user.IsShowCashFlow = isShowCashFlow;
                     db.SaveChanges();
                     TempData["success"] = "Kullanıcı düzenlendi.";
                     return RedirectToAction("Index");

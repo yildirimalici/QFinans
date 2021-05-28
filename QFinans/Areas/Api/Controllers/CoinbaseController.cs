@@ -14,7 +14,7 @@ using System.Web.Mvc;
 
 namespace QFinans.Areas.Api.Controllers
 {
-    [Log]
+    [LogJson]
     public class CoinbaseController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();

@@ -226,6 +226,7 @@
     <Compile Include="Areas\Api\Models\DrawViewModelCoin.cs" />
     <Compile Include="Areas\Api\Models\JsonObjectViewModel.cs" />
     <Compile Include="Areas\Api\Models\Log.cs" />
+    <Compile Include="Areas\Api\Models\MoneyTransfer.cs" />
     <Compile Include="Areas\Api\Models\MoneyTransferDepositViewModel.cs" />
     <Compile Include="Areas\Api\Models\MoneyTransferDrawViewModel.cs" />
     <Compile Include="Areas\Api\Models\ShiftType.cs" />
@@ -252,6 +253,7 @@
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\AccountTransactionsController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
+    <Compile Include="Controllers\MoneyTransfersController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Controllers\ShiftTypeController.cs" />
     <Compile Include="Controllers\SimLocationController.cs" />
@@ -2437,6 +2439,14 @@
     <Content Include="Views\Report\CashFlow.cshtml" />
     <Content Include="Views\AccountTransactions\EditCoin.cshtml" />
     <Content Include="Views\Home\GetQR.cshtml" />
+    <Content Include="Views\MoneyTransfers\Deposit.cshtml" />
+    <Content Include="Views\MoneyTransfers\Draw.cshtml" />
+    <Content Include="Views\MoneyTransfers\Details.cshtml" />
+    <Content Include="Views\MoneyTransfers\CreateDeposit.cshtml" />
+    <Content Include="Views\MoneyTransfers\CreateDraw.cshtml" />
+    <Content Include="Views\MoneyTransfers\Edit.cshtml" />
+    <Content Include="Views\Home\HavaleEft.cshtml" />
+    <Content Include="Views\Report\DailyMoneyTransfer.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

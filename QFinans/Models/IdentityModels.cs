@@ -21,6 +21,15 @@ namespace QFinans.Models
 
         public bool IsAdmin { get; set; }
 
+        [Display(Name = "Papara Dashboard")]
+        public bool PaparaDashboard { get; set; }
+
+        [Display(Name = "Havale EFT Dashboard")]
+        public bool HavaleEFtDashboard { get; set; }
+
+        [Display(Name = "Hesap Hareketlerinin Tamamını Görsün mü?")]
+        public bool IsShowCashFlow { get; set; }
+
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
             // Note the authenticationType must match the one defined in CookieAuthenticationOptions.AuthenticationType
@@ -79,6 +88,7 @@ namespace QFinans.Models
         public DbSet<CoinParameters> CoinParameters { get; set; }
         public DbSet<Cryptocurrency> Cryptocurrency { get; set; }
 
+        public DbSet<MoneyTransfer> MoneyTransfer { get; set; }
         public DbSet<BankType> BankType { get; set; }
         public DbSet<BankInfo> BankInfo { get; set; }
         public DbSet<CustomerBankInfo> CustomerBankInfo { get; set; }

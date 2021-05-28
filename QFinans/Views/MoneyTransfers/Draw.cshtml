@@ -1,20 +1,17 @@
-﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.AccountTransactions>
+﻿@model PagedList.IPagedList<QFinans.Areas.Api.Models.MoneyTransfer>
 @using PagedList.Mvc;
 @using QFinans.Models;
 @using QFinans.Areas.Api.Models;
 
 @{
-    ViewBag.Title = "Yatırım";
+    ViewBag.Title = "Çekim";
     DateTime date = DateTime.Now.Date;
     DateTime startDate = new DateTime(date.Year, date.Month, 1); ;
     DateTime endDate = startDate.AddMonths(1).AddSeconds(-1);
     ApplicationDbContext db = new ApplicationDbContext();
-    var _cashIn = db.CashFlow.Where(c => c.IsDeleted == false && c.IsCashIn == true && c.TransactionDate >= startDate && c.TransactionDate <= endDate);
-    var _cashInAll = db.CashFlow.Where(c => c.IsDeleted == false && c.IsCashIn == true);
-    var _cashOutAll = db.CashFlow.Where(c => c.IsDeleted == false && c.IsCashIn == false);
     var _timeNow = DateTime.Now.AddMinutes(-30);
     var _lastOneHourDeposit = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= _timeNow).ToList();
-    var _accountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false).ToList();
+    var _bankInfo = db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false).ToList();
 
     if (ViewBag.CurrentDateFrom != null)
     {
@@ -30,14 +27,13 @@
 <div class="card">
     <div class="card-body">
         <div class="d-flex justify-content-between mb-3 border-bottom">
-            <h5 class="card-title">Yatırım Talepleri</h5>
+            <h5 class="card-title">Çekim Talepleri (H/EFT)</h5>
             <div>
-                <a class="btn btn-xs btn-primary" href="@Url.Action("Create", "CashFlow")"><i class="fas fa-plus-circle"></i> Hesap Hareketi Ekle</a>
-                <a class="btn btn-xs btn-success" href="@Url.Action("CreateDeposit", "AccountTransactions")"><i class="fas fa-plus-circle"></i> Yatırım Ekle</a>
+                <a class="btn btn-xs btn-success" href="@Url.Action("CreateDraw", "MoneyTransfers")"><i class="fas fa-plus-circle"></i> Çekim Ekle</a>
             </div>
         </div>
 
-        @using (Html.BeginForm("Deposit", "AccountTransactions", FormMethod.Get, new { @id = "formSearch" }))
+        @using (Html.BeginForm("Draw", "MoneyTransfers", FormMethod.Get, new { @id = "formSearch" }))
         {
             <div class="row mb-4 align-items-end">
                 <div class="col-xl-2">
@@ -54,9 +50,9 @@
                     <label>Hesap</label>
                     <select class="custom-select select2" id="accountInfoId" name="accountInfoId">
                         <option selected>Seçiniz</option>
-                        @foreach (var item in _accountInfo)
+                        @foreach (var item in _bankInfo)
                         {
-                            <option value="@item.Id">@item.Name @item.SurName (@item.AccountNumber)</option>
+                            <option value="@item.Id">@item.Name @item.Surname (@item.BankType.Name - @item.Iban)</option>
                         }
                     </select>
                 </div>
@@ -119,7 +115,10 @@
                         Tutar
                     </th>
                     <th>
-                        Hesap No
+                        Müşteri Bankası
+                    </th>
+                    <th>
+                        Hesap
                     </th>
                     <th class="tarih">
                         Tarih
@@ -135,22 +134,7 @@
                 {
                     <tr class="@(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm ? "bg-confirm": "") @(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Deny ? "bg-deny": "") @(@item.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New ? "bg-new": "")" id="transaction-@item.Id">
                         <td id="id-@item.Id">
-                            @if (item.AddUserId == "user-api-2" && item.UpdateUserId != "user_bot")
-                            {
-                                <b><i>@Html.DisplayFor(modelItem => item.Id)</i></b>
-                            }
-                            else if (item.AddUserId == "user-api-2" && item.UpdateUserId == "user_bot")
-                            {
-                                <b><u><i>@Html.DisplayFor(modelItem => item.Id)</i></u></b>
-                            }
-                            else if (item.UpdateUserId == "user_bot")
-                            {
-                                <b><u>@Html.DisplayFor(modelItem => item.Id)</u></b>
-                            }
-                            else
-                            {
-                                <span>@Html.DisplayFor(modelItem => item.Id)</span>
-                            }
+                            @Html.DisplayFor(modelItem => item.Id)
                         </td>
                         <td id="userName-@item.Id">
                             @if (_lastOneHourDeposit.Where(x => x.UserName == item.UserName).Count() >= 2 && _lastOneHourDeposit.Any(x => x.Id == item.Id))
@@ -172,67 +156,23 @@
                         <td class="text-right" id="amount-@item.Id" style="font-size:18px">
                             @if (item.Amount == item.OldAmount)
                             {
-                                if (item.IsCoin)
-                                {
-                                    <span class="mb-1">@item.Amount.ToString("N0")</span><br />
-                                    <span class="badge badge-primary" style="font-size:12px">@item.ExchangeValue @item.UnitSymbol</span>
-                                }
-                                else
-                                {
-                                    @item.Amount.ToString("N0")
-                                }
+                                <span class="mb-1">@item.Amount.ToString("N0")</span><br />
                             }
                             else
                             {
-                                if (item.IsCoin)
-                                {
-                                    <span class="badge badge-success" style="font-size:100%">@item.Amount.ToString("N0")</span>
-                                    <span class="badge badge-danger" style="font-size:100%">@String.Format("{0:N0}", item.OldAmount)</span><br />
-                                    <span class="badge badge-primary" style="font-size:12px">@(item.Amount / item.ExchangeUnitValue ) @item.UnitSymbol</span>
-                                }
-                                else
-                                {
-                                    <span class="badge badge-success" style="font-size:100%">@item.Amount.ToString("N0")</span>
-                                    <span class="badge badge-danger" style="font-size:100%">@String.Format("{0:N0}", item.OldAmount)</span>
-                                }
+                                <span class="badge badge-success" style="font-size:100%">@item.Amount.ToString("N0")</span>
+                                <span class="badge badge-danger" style="font-size:100%">@String.Format("{0:N0}", item.OldAmount)</span>
                             }
                         </td>
+                        <td>
+                            <span class="d-block">@Html.DisplayFor(modelItem => item.CustomerBankInfo.BankType.Name)</span>
+                            <span class="d-block">@Html.DisplayFor(modelItem => item.CustomerIban)</span>
+                        </td>
                         <td id="accountNumber-@item.Id" class="text-right">
-                            @if (item.AccountInfo != null && item.IsCoin == false && item.IsMoneyTransfer == false)
+                            @if (item.BankInfoId != null)
                             {
-                                <span class="d-block">@item.AccountInfoId - @item.AccountInfo.Name @item.AccountInfo.SurName</span>
-                                if (User.IsInRole("ConfirmDepositAccountTransactions"))
-                                {
-                                    <span class="d-block">
-                                        <span class="badge badge-secondary" data-toggle="tooltip" data-placement="bottom" title="Toplam yatırım sayısı / Hesap yatırım sayısı limiti">
-                                            @((Model.Where(x => x.Deposit == true && x.AccountInfoId == item.AccountInfoId && x.AddDate >= startDate && x.AddDate <= endDate && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Count() + _cashIn.Where(c => c.AccountInfoId == item.AccountInfoId).Count()).ToString("N0"))
-                                            / @item.AccountInfo.AccountInfoType.TransactionLimit.ToString("N0")
-                                        </span>
-                                    </span>
-                                    <span class="d-block">
-                                        <span class="badge badge-secondary" data-toggle="tooltip" data-placement="bottom" title="Hesap Bakiyesi" style="font-size:14px">
-                                            @((db.AccountTransactions.Where(x => x.Deposit == true && x.AccountInfoId == item.AccountInfoId && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
-
-                                        - db.AccountTransactions.Where(x => x.Deposit == false && x.AccountInfoId == item.AccountInfoId && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm && x.DrawSplit.Where(d => d.IsDeleted == false && d.AccountInfoId == item.AccountInfoId).Count() == 0).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
-
-                                        - db.DrawSplit.Where(x => x.IsDeleted == false && x.AccountInfoId == item.AccountInfoId).Select(x => x.Amount).DefaultIfEmpty(0).Sum()
-
-                                        - ((db.AccountTransactions.Where(x => x.Deposit == true && x.IsFree == false && x.AccountInfoId == item.AccountInfoId && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum() + _cashInAll.Where(x => x.IsFree == false && x.AccountInfoId == item.AccountInfoId).Select(x => x.Amount).DefaultIfEmpty(0).Sum()) * 3.4M / 100)
-
-                                        + _cashInAll.Where(c => c.AccountInfoId == item.AccountInfoId).Select(c => c.Amount).DefaultIfEmpty(0).Sum()
-
-                                        - _cashOutAll.Where(c => c.AccountInfoId == item.AccountInfoId).Select(c => c.Amount).DefaultIfEmpty(0).Sum()).ToString("N0"))
-                                        </span>
-                                    </span>
-                                }
-                            }
-                            else if (item.IsCoin)
-                            {
-                                <span class="badge badge-primary">Coinbase</span>
-                            }
-                            else if (item.IsMoneyTransfer)
-                            {
-                                <span class="d-block">@item.BankInfoId - @item.Name @item.SurName</span>
+                                <span class="d-block">@item.BankInfoId - @item.BankInfo.Name @item.BankInfo.Surname</span>
+                                <span class="d-block">@item.BankInfo.BankType.Name</span>
                             }
                         </td>
                         <td class="text-center">
@@ -264,18 +204,9 @@
                             }
                         </td>
                         <td>
-                            @if (item.IsCoin == false)
-                            {
-                                <button type="button" class="btn btn-xs btn-success btn-block mb-1" data-toggle="modal" data-target="#modelConfirm-@item.Id"><i class="fas fa-check-circle"></i> Onayla</button>
-                                <button type="button" class="btn btn-xs btn-danger btn-block mb-1" data-toggle="modal" data-target="#exampleModal-@item.Id"><i class="fas fa-times-circle"></i> Reddet</button>
-                                <a class="btn btn-xs btn-warning btn-block" href="@Url.Action("Edit", "AccountTransactions", new { id = item.Id })"><i class="far fa-edit"></i> Düzenle</a>
-                            }
-                            else if (item.IsCoin == true)
-                            {
-                                <button type="button" class="btn btn-xs btn-success btn-block mb-1" data-toggle="modal" data-target="#modelConfirm-@item.Id"><i class="fas fa-check-circle"></i> Onayla</button>
-                                <button type="button" class="btn btn-xs btn-danger btn-block mb-1" data-toggle="modal" data-target="#exampleModal-@item.Id"><i class="fas fa-times-circle"></i> Reddet</button>
-                                <a class="btn btn-xs btn-warning btn-block" href="@Url.Action("EditCoin", "AccountTransactions", new { id = item.Id })"><i class="far fa-edit"></i> Düzenle</a>
-                            }
+                            <button type="button" class="btn btn-xs btn-success btn-block mb-1" data-toggle="modal" data-target="#modelConfirm-@item.Id"><i class="fas fa-check-circle"></i> Onayla</button>
+                            <button type="button" class="btn btn-xs btn-danger btn-block mb-1" data-toggle="modal" data-target="#exampleModal-@item.Id"><i class="fas fa-times-circle"></i> Reddet</button>
+                            <a class="btn btn-xs btn-warning btn-block" href="@Url.Action("Edit", "MoneyTransfers", new { id = item.Id })"><i class="far fa-edit"></i> Düzenle</a>
                         </td>
                     </tr>
                 }
@@ -288,7 +219,7 @@
                 <span>Sayfa @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) / @Model.PageCount</span>
             </div>
             <div class="col-sm-10">
-                @Html.PagedListPager(Model, page => Url.Action("Deposit", "AccountTransactions", new { page = page, currentFilter = ViewBag.CurrentFilter, currentDateFrom = ViewBag.CurrentDateFrom, currentDateTo = ViewBag.CurrentDateTo, currentTransactionStatus = ViewBag.CurrentTransactionStatus, currentAccountInfoId = ViewBag.CurrentAccountInfoId })
+                @Html.PagedListPager(Model, page => Url.Action("Draw", "MoneyTransfers", new { page = page, currentFilter = ViewBag.CurrentFilter, currentDateFrom = ViewBag.CurrentDateFrom, currentDateTo = ViewBag.CurrentDateTo, currentTransactionStatus = ViewBag.CurrentTransactionStatus, currentAccountInfoId = ViewBag.CurrentAccountInfoId })
                                                                             , new PagedListRenderOptions
                                                                             {
                                                                                 UlElementClasses = new string[] { "pagination pagination-sm justify-content-end my-0" },
@@ -306,7 +237,7 @@
     <div class="modal fade" id="modelConfirm-@item.Id" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
-                <form action="/AccountTransactions/ConfirmDeposit/@item.Id" method="post" id="formConfirm-@item.Id">
+                <form action="/MoneyTransfers/ConfirmDraw/@item.Id" method="post" id="formConfirm-@item.Id">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h5 class="modal-title">Onayla</h5>
@@ -318,27 +249,15 @@
                         <div class="alert alert-warning" role="alert">
                             Onaylamak istediğinizden emin misiniz?
                         </div>
-                        <div class="form-group ml-2 my-2">
-                            <div class="custom-control custom-checkbox mr-sm-2">
-                                @if (item.IsCoin == false)
-                                {
-                                    if (item.IsFree == true)
-                                    {
-                                        <input type="checkbox" class="custom-control-input" id="IsFree-@item.Id" name="IsFree" value="true" checked="checked">
-                                    }
-                                    else
-                                    {
-                                        <input type="checkbox" class="custom-control-input" id="IsFree-@item.Id" name="IsFree" value="true">
-                                    }
-                                    <input name="IsFree" type="hidden" value="false">
-                                    <label class="custom-control-label" for="IsFree-@item.Id">Ücretsiz mi?</label>
-                                }
-                                else
-                                {
-                                    <input name="IsFree" type="hidden" value="false">
-                                }
-                            </div>
-                        </div>
+
+                        <label for="bankInfo-@item.Id">Hesap</label>
+                        <select class="form-control mb-3 select2" id="bankInfo-@item.Id" name="bankInfoId">
+                            <option value="">Seçiniz</option>
+                            @foreach (var item2 in _bankInfo)
+                            {
+                                <option value="@item2.Id">@item2.Name @item2.Surname (@item2.BankType.Name - @item2.Iban)</option>
+                            }
+                        </select>
                     </div>
 
                     <div class="modal-footer">
@@ -355,7 +274,7 @@
     <div class="modal fade" id="exampleModal-@item.Id" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle-@item.Id" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content" id="modalContent-@item.Id">
-                <form action="/AccountTransactions/Deny/@item.Id" method="post" id="formDeny-@item.Id">
+                <form action="/MoneyTransfers/Deny/@item.Id" method="post" id="formDeny-@item.Id">
                     @Html.AntiForgeryToken()
                     <div class="modal-header">
                         <h5 class="modal-title">Reddet</h5>

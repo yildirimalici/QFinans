@@ -1,4 +1,4 @@
-﻿@model IEnumerable<QFinans.Areas.Api.Models.AccountTransactions>
+﻿@model IEnumerable<QFinans.Areas.Api.Models.MoneyTransfer>
 @using Microsoft.AspNet.Identity
 @using QFinans.Models
 @{
@@ -10,11 +10,11 @@
 }
 
 <div class="d-flex justify-content-between">
-    <h5 class="card-title">Dashboard (Papara) <small class="text-muted" id="currentDate">@ViewBag.StartDate</small></h5>
-    @if (_currentUser.HavaleEFtDashboard == true)
+    <h5 class="card-title">Dashboard (H/EFT) <small class="text-muted" id="currentDate">@ViewBag.StartDate</small></h5>
+    @if (_currentUser.PaparaDashboard == true)
     {
         <div>
-            <a class="btn btn-xs btn-primary" href="@Url.Action("HavaleEft", "Home")">H/EFT</a>
+            <a class="btn btn-xs btn-primary" href="@Url.Action("Index", "Home")">Papara</a>
         </div>
     }
 </div>
@@ -151,7 +151,7 @@
         </div>
     </div>
 
-    @if (Request.IsAuthenticated)
+    @*@if (Request.IsAuthenticated)
     {
         if (_currentUser.IsAdmin == true)
         {
@@ -171,9 +171,9 @@
                 </div>
             </div>
         }
-    }
+    }*@
 
-    @if (Request.IsAuthenticated)
+    @*@if (Request.IsAuthenticated)
     {
         if (_currentUser.IsAdmin == true)
         {
@@ -192,40 +192,8 @@
                     </div>
                 </div>
             </div>
-
-            @*<div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                    <div class="d-flex bg-dark rounded border-dark">
-                        <div class="p-3">
-                            <div class="p-2 bg-transparent text-white rounded shadow-sm">
-                                <i class="fas fa-coins fa-3x"></i>
-                            </div>
-                        </div>
-                        <div class="p-2 flex-grow-1">
-                            <div class="py-2">
-                                <span class="d-block">Ücretsiz Cash In Tutarı</span>
-                                <span class="d-block font-weight-bolder h4" id="cashInFreeSum">@ViewBag.CashInFreeSum.ToString("N0")</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-lg-6 col-md-6 mb-3">
-                    <div class="d-flex bg-dark rounded border-dark">
-                        <div class="p-3">
-                            <div class="p-2 bg-transparent text-white rounded shadow-sm">
-                                <i class="fas fa-coins fa-3x"></i>
-                            </div>
-                        </div>
-                        <div class="p-2 flex-grow-1">
-                            <div class="py-2">
-                                <span class="d-block">Ücretsiz Toplam Tutar</span>
-                                <span class="d-block font-weight-bolder h4" id="totalFreeSum">@((ViewBag.DepositFreeSum + ViewBag.CashInFreeSum).ToString("N0"))</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>*@
         }
-    }
+    }*@
 
 </div>
 
@@ -235,13 +203,13 @@
     {
         <h6 class="card-title">Aktif Hesaplar</h6>
 
-        foreach (var item in ViewBag.ActiveAccountInfo)
+        foreach (var item in ViewBag.ActiveBankInfo)
         {
-            <div class="card mb-3" style="color: #@item.AccountInfoType.TextColor !important; background-color: #@item.AccountInfoType.BgColor !important">
+            <div class="card mb-3">
                 <div class="card-body pt-2 pb-1">
                     <div class="row">
                         <div class="col-md-8">
-                            <h4>@item.Id - @item.Name @item.SurName (@(item.TransactionCountDeposit == null ? 0 : item.TransactionCountDeposit))  (@(item.AccountAmountRedirectId == null ? "" : item.AccountAmountRedirect.Name))</h4>
+                            <h4>@item.Id - @item.Name @item.Surname (@(item.TransactionCountDeposit == null ? 0 : item.TransactionCountDeposit)) </h4>
                         </div>
                         <div class="col-md-4">
                             <h4 class="text-right font-weight-bold">@((item.Balance == null ? 0 : item.Balance).ToString("N0"))</h4>
@@ -261,14 +229,12 @@
         function getDashboardData0() {
             $.getJSON('/Home/GetDashboardJsonData', function (data) {
                 //İşlemler...
-                $("#newDepositCount").html(formatCurrency(data.NewDepositCount));
-                $("#newDepositSum").html(formatCurrency(data.NewDepositSum));
-                $("#newDrawCount").html(formatCurrency(data.NewDrawCount));
-                $("#newDrawSum").html(formatCurrency(data.NewDrawSum));
-                $("#confirmDepositCount").html(formatCurrency(data.ConfirmDepositCount));
-                $("#confirmDepositSum").html(formatCurrency(data.ConfirmDepositSum));
-                $("#confirmDrawCount").html(formatCurrency(data.ConfirmDrawCount));
-                $("#confirmDrawSum").html(formatCurrency(data.ConfirmDrawSum));
+                $("#newDepositCount").html(formatCurrency(data.BankNewDepositCount));
+                $("#newDepositSum").html(formatCurrency(data.BankNewDepositSum));
+                $("#newDrawCount").html(formatCurrency(data.BankNewDrawCount));
+                $("#newDrawSum").html(formatCurrency(data.BankNewDrawSum));
+                $("#confirmDepositSum").html(formatCurrency(data.BankConfirmDepositSum));
+                $("#confirmDrawSum").html(formatCurrency(data.BankConfirmDrawSum));
                 $("#currentDate").html(data.CurrentDate);
             });
         };
@@ -278,7 +244,7 @@
         }, 15000);
     </script>
 
-    @if (Request.IsAuthenticated)
+    @*@if (Request.IsAuthenticated)
     {
         if (_currentUser.IsAdmin == true || User.Identity.GetUserName() == "nano@qfinans.com")
         {
@@ -302,5 +268,5 @@
                 }, 15000);
             </script>
         }
-    }
+    }*@
 }

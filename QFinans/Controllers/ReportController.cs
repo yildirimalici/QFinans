@@ -253,7 +253,7 @@ namespace QFinans.Controllers
                 currentDateFrom = DateTime.Now.AddMonths(-1).Date;
             }
 
-            IQueryable<CashFlow> cashFlow = db.CashFlow;
+            IQueryable<CashFlow> cashFlow = db.CashFlow.Where(x => x.IsDeleted == false);
 
             if (dateFrom == null) { dateFrom = currentDateFrom; }
             ViewBag.CurrentDateFrom = dateFrom;
@@ -291,6 +291,82 @@ namespace QFinans.Controllers
                 Day = g.Key.Day,
                 CashIn = g.Sum(x => x.CashIn),
                 CashOut = g.Sum(x => x.CashOut),
+            });
+
+            //ViewBag.Data = data;
+
+            var banCharge = db.SystemParameters.FirstOrDefault().BankCharge;
+            if (banCharge == null)
+            {
+                ViewBag.BankCharge = 0;
+            }
+            else
+            {
+                ViewBag.BankCharge = banCharge;
+            }
+
+            return View(reportData);
+        }
+
+        [CustomAuth(Roles = "DailyMoneyTransferReport")]
+        // GET: Report
+        public ActionResult DailyMoneyTransfer(DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo)
+        {
+            if (currentDateFrom == null)
+            {
+                currentDateFrom = DateTime.Now.AddMonths(-1).Date;
+            }
+
+            IQueryable<MoneyTransfer> moneyTransfer = db.MoneyTransfer;
+
+            if (dateFrom == null) { dateFrom = currentDateFrom; }
+            ViewBag.CurrentDateFrom = dateFrom;
+            if (dateFrom.HasValue)
+                moneyTransfer = moneyTransfer.Where(x => x.AddDate >= dateFrom);
+
+            if (dateTo == null) { dateTo = currentDateTo; }
+            ViewBag.CurrentDateTo = dateTo;
+            if (dateTo.HasValue)
+                moneyTransfer = moneyTransfer.Where(x => x.AddDate <= dateTo);
+
+            var data = moneyTransfer.OrderByDescending(x => x.AddDate).Select(x => new DailyTansactionReportViewModel
+            {
+                Id = x.Id,
+                Year = x.AddDate.Year,
+                Month = x.AddDate.Month,
+                Day = x.AddDate.Day,
+                NewDepositCount = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.New ? 1 : 0,
+                NewDepositSum = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.New ? x.Amount : 0,
+                ConfirmDepositCount = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Confirm ? 1 : 0,
+                ConfirmDepositSum = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Confirm ? x.Amount : 0,
+                DenyDepositCount = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Deny ? 1 : 0,
+                DenyDepositSum = x.Deposit == true && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Deny ? x.Amount : 0,
+                NewDrawCount = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.New ? 1 : 0,
+                NewDrawSum = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.New ? x.Amount : 0,
+                ConfirmDrawCount = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Confirm ? 1 : 0,
+                ConfirmDrawSum = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Confirm ? x.Amount : 0,
+                DenyDrawCount = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Deny ? 1 : 0,
+                DenyDrawSum = x.Deposit == false && x.TransactionStatus == Areas.Api.Models.TransactionStatus.Deny ? x.Amount : 0,
+
+            }).ToList();
+
+            var reportData = data.GroupBy(x => new { x.Year, x.Month, x.Day }).Select(g => new DailyTansactionReportSumViewModel
+            {
+                Year = g.Key.Year,
+                Month = g.Key.Month,
+                Day = g.Key.Day,
+                NewDepositCount = g.Sum(x => x.NewDepositCount),
+                NewDepositSum = g.Sum(x => x.NewDepositSum),
+                ConfirmDepositCount = g.Sum(x => x.ConfirmDepositCount),
+                ConfirmDepositSum = g.Sum(x => x.ConfirmDepositSum),
+                DenyDepositCount = g.Sum(x => x.DenyDepositCount),
+                DenyDepositSum = g.Sum(x => x.DenyDepositSum),
+                NewDrawCount = g.Sum(x => x.NewDrawCount),
+                NewDrawSum = g.Sum(x => x.NewDrawSum),
+                ConfirmDrawCount = g.Sum(x => x.ConfirmDrawCount),
+                ConfirmDrawSum = g.Sum(x => x.ConfirmDrawSum),
+                DenyDrawCount = g.Sum(x => x.DenyDrawCount),
+                DenyDrawSum = g.Sum(x => x.DenyDrawSum)
             });
 
             //ViewBag.Data = data;

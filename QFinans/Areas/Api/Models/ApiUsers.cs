@@ -26,5 +26,11 @@ namespace QFinans.Areas.Api.Models
         public string Job { get; set; }
 
         public string Organization { get; set; }
+
+        public bool Papara { get; set; }
+
+        public bool Coinbase { get; set; }
+
+        public bool MoneyTransfer { get; set; }
     }
 }

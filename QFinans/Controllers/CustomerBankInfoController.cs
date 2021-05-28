@@ -80,7 +80,8 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "CreateCustomerBankInfo")]
         public ActionResult Create()
         {
-            ViewBag.BankTypeId = new SelectList(db.BankType.Where(x => x.IsDeleted == false), "Id", "Name");
+            var customerBankInfoBankTypeIds = db.CustomerBankInfo.Where(x => x.IsDeleted == false).Select(x => x.BankTypeId).ToArray();
+            ViewBag.BankTypeId = new SelectList(db.BankType.Where(x => x.IsDeleted == false && !customerBankInfoBankTypeIds.Contains(x.Id)), "Id", "Name");
             return View();
         }
 

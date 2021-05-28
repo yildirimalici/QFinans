@@ -15,6 +15,8 @@ namespace QFinans.Areas.Api.Models
 
         public string Coinbase { get; set; }
 
-        public string MoneyTransfer { get; set; }
+        public string MoneyTransferDeposit { get; set; }
+
+        public string MoneyTransferDraw { get; set; }
     }
 }

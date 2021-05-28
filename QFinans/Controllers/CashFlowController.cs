@@ -48,7 +48,7 @@ namespace QFinans.Controllers
             DateTime startDate = date.AddHours(-1);
             DateTime endDate = date.AddDays(1).AddSeconds(-1);
 
-            if (_user.IsAdmin == false)
+            if (_user.IsAdmin == false && _user.IsShowCashFlow == false)
             {
                 cashFlow = cashFlow.Where(x => (x.AddUserId == _userId || x.CashFlowType.IsOtherUserSee == true) && x.TransactionDate >= startDate && x.TransactionDate <= endDate);
             } 

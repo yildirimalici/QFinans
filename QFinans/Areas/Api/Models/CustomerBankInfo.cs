@@ -26,7 +26,7 @@ namespace QFinans.Areas.Api.Models
 
         public DateTime? UpdateDate { get; set; }
 
-        public ICollection<AccountTransactions> AccountTransactions { get; set; }
+        public ICollection<MoneyTransfer> MoneyTransfer { get; set; }
         public virtual BankType BankType { get; set; }
     }
 }

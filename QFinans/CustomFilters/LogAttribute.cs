@@ -53,21 +53,21 @@ namespace QFinans.CustomFilters
         private string SerializeRequest(HttpRequestBase request)
         {
             string result = null;
-            //#region Form
-            //List<string> formVals = new List<string>(); //eğer sayfada bir form varsa, formda gönderilen tüm inputları alıp bir listeye atıyorum.
-            //if (request.Form.AllKeys != null && request.Form.AllKeys.ToList().Count > 0)
-            //{
-            //    foreach (string s in request.Form.AllKeys.ToList())
-            //    {
-            //        formVals.Add(request.Unvalidated().Form[s]);
-            //    }
-            //}
-            //#endregion
+            #region Form
+            List<string> formVals = new List<string>(); //eğer sayfada bir form varsa, formda gönderilen tüm inputları alıp bir listeye atıyorum.
+            if (request.Form.AllKeys != null && request.Form.AllKeys.ToList().Count > 0)
+            {
+                foreach (string s in request.Form.AllKeys.ToList())
+                {
+                    formVals.Add(request.Unvalidated().Form[s]);
+                }
+            }
+            #endregion
 
             result = Json.Encode(new
             {
-                //request.Form,    //gönderilen formun tamamı
-                //formVals,   //formdaki inputlara girilen veriler
+                request.Form,    //gönderilen formun tamamı
+                formVals,   //formdaki inputlara girilen veriler
                 request.Browser.Browser,    //kullanıcının tarayıcısı
                 request.Browser.IsMobileDevice,     //istek bir mobil cihazdan mı geldi
                 request.Browser.Version,    //kullanıcının tarayıcı versiyonu

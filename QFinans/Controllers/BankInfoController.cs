@@ -16,6 +16,7 @@ using QFinans.CustomFilters;
 namespace QFinans.Controllers
 {
     [Authorize]
+    [Log]
     public class BankInfoController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();

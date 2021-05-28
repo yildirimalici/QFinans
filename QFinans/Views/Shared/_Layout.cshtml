@@ -6,6 +6,7 @@
     var _user = db.Users.Find(User.Identity.GetUserId());
     DateTime startDate = DateTime.Now.Date;
     DateTime endDate = DateTime.Now.AddDays(1).Date;
+    string _currentDateFrom = DateTime.Now.AddDays(-7).Date.ToString("yyyy-MM-dd");
     var newDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false).Count();
     var newDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate && x.IsCoin == false).Count();
     if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
@@ -22,7 +23,10 @@
 
     var emergencyAccountId = db.SystemParameters.Select(x => (x.EmergencyAccountId == null ? null : x.EmergencyAccountId)).FirstOrDefault();
 
-    var _organization = db.ApiUsers.Where(x => x.Job == null).ToList();
+    var _organization = db.ApiUsers.Where(x => x.Job == null && x.Organization != null).ToList();
+
+    var newBankDepositCount = db.MoneyTransfer.Where(x => x.Deposit == true && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
+    var newBankDrawCount = db.MoneyTransfer.Where(x => x.Deposit == false && x.TransactionStatus == QFinans.Areas.Api.Models.TransactionStatus.New && x.AddDate >= startDate && x.AddDate < endDate).Count();
 }
 <!DOCTYPE html>
 <html class="h-100">
@@ -85,7 +89,7 @@
                         if (User.IsInRole("DepositAccountTransactions"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-white" href="@Url.Action("Deposit", "AccountTransactions")">
+                                <a class="nav-link text-white" href="@Url.Action("Deposit", "AccountTransactions")?currentDateFrom=@_currentDateFrom">
                                     <i class="fas fa-arrow-circle-down"></i> Yatırım <span class="badge badge-light" id="navbarNewDepositCount">@newDepositCount</span>
                                 </a>
                             </li>
@@ -94,8 +98,26 @@
                         if (User.IsInRole("DrawAccountTransactions"))
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-white" href="@Url.Action("Draw", "AccountTransactions")">
+                                <a class="nav-link text-white" href="@Url.Action("Draw", "AccountTransactions")?currentDateFrom=@_currentDateFrom">
                                     <i class="fas fa-arrow-circle-up"></i> Çekim <span class="badge badge-light" id="navbarNewDrawCount">@newDrawCount</span>
+                                </a>
+                            </li>
+                        }
+
+                        if (User.IsInRole("DepositMoneyTransfers"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="@Url.Action("Deposit", "MoneyTransfers")?currentDateFrom=@_currentDateFrom">
+                                    <i class="fas fa-arrow-circle-down"></i> Yatırım (H/EFT) <span class="badge badge-light" id="navbarBankNewDepositCount">@newBankDepositCount</span>
+                                </a>
+                            </li>
+                        }
+
+                        if (User.IsInRole("DrawMoneyTransfers"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-white" href="@Url.Action("Draw", "MoneyTransfers")?currentDateFrom=@_currentDateFrom">
+                                    <i class="fas fa-arrow-circle-up"></i> Çekim (H/EFT) <span class="badge badge-light" id="navbarBankNewDrawCount">@newBankDrawCount</span>
                                 </a>
                             </li>
                         }
@@ -132,6 +154,11 @@
                                 @if (User.IsInRole("CashFlowReport"))
                                 {
                                     <a class="dropdown-item" href="@Url.Action("CashFlow", "Report")">Günlük Hesap Hareketi Raporu</a>
+                                }
+
+                                @if (User.IsInRole("DailyMoneyTransferReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("DailyMoneyTransfer", "Report")">Günlük İşlem Raporu (H/EFT)</a>
                                 }
                             </div>
                         </li>
@@ -276,6 +303,7 @@
         @Html.Hidden("GetTrans", Url.Action("GetNotificationAccountTransactions", "Home"))
         @Html.Hidden("GetNav", Url.Action("GetDashboardJsonData", "Home"))
         @Html.Hidden("GetHide", Url.Action("NotificationHideAllData", "Home"))
+        @Html.Hidden("GetHide", Url.Action("NotificationHideAllDataForMoneyTransfer", "Home"))
 
         @RenderBody()
     </div>
@@ -342,21 +370,7 @@
         // or this public method:
         //customToast.configure(options);
 
-        setInterval(function () {
-            $.getJSON('/Home/NotificationShowData', function (data) {
-                if (data.id != 0) {
-                    if (data.deposit == true) {
-                        var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında yatırım talebi var.";
-                        customToast.success(msg);
-                    } else {
-                        var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında çekim talebi var.";
-                        customToast.error(msg);
-                    };
-                    $.getJSON('/Home/NotificationHideData/' + data.id);
-                }
-            });
 
-        }, 10000);
         setInterval(function () {
             $.getJSON('/Home/GetDashboardJsonData', function (data) {
                 //İşlemler...
@@ -365,11 +379,57 @@
                 $("#navbarActiveAccountCount").html(data.ActiveTotalAccountCount);
                 $("#navbarActivePaparaCount").html(data.ActivePaparaCount);
                 $("#navbarActiveBankCount").html(data.ActiveBankCount);
+                $("#navbarBankNewDepositCount").html(formatCurrency(data.BankNewDepositCount));
+                $("#navbarBankNewDrawCount").html(formatCurrency(data.BankNewDrawCount));
             });
             $.getJSON('/Home/SetAccountAsPassive/');
         }, 13000);
 
     </script>
+
+    @if (_user.PaparaDashboard == true)
+    {
+        <script>
+            setInterval(function () {
+                $.getJSON('/Home/NotificationShowData', function (data) {
+                    if (data.id != 0) {
+                        if (data.deposit == true) {
+                            var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında yatırım talebi var.";
+                            customToast.success(msg);
+                        }
+                        else {
+                            var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında çekim talebi var.";
+                            customToast.error(msg);
+                        };
+                        $.getJSON('/Home/NotificationHideData/' + data.id);
+                    }
+                });
+
+            }, 10000);
+        </script>
+    }
+
+    @if (_user.HavaleEFtDashboard == true)
+    {
+        <script>
+            setInterval(function () {
+                $.getJSON('/Home/NotificationShowDataForMoneyTransfer', function (data) {
+                    if (data.id != 0) {
+                        if (data.deposit == true) {
+                            var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında yatırım talebi var.";
+                            customToast.success(msg);
+                        }
+                        else {
+                            var msg = "id: " + data.id + " " + data.username + " kullanıcısının <b>" + formatCurrency(data.amount) + "</b> tutarında çekim talebi var.";
+                            customToast.error(msg);
+                        };
+                        $.getJSON('/Home/NotificationHideDataForMoneyTransfer/' + data.id);
+                    }
+                });
+
+            }, 10000);
+        </script>
+    }
 
     @RenderSection("scripts", required: false)
 

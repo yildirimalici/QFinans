@@ -14,6 +14,8 @@ namespace QFinans.Areas.Api.Models
         [Required]
         public string Name { get; set; }
 
+        public string MiddleName { get; set; }
+
         [Required]
         public string SurName { get; set; }
 

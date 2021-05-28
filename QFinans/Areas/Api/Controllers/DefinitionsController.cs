@@ -1,4 +1,5 @@
 ﻿using QFinans.Areas.Api.Models;
+using QFinans.CustomFilters;
 using QFinans.Models;
 using System;
 using System.Collections.Generic;
@@ -8,6 +9,7 @@ using System.Web.Mvc;
 
 namespace QFinans.Areas.Api.Controllers
 {
+    [LogJson]
     public class DefinitionsController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -93,7 +95,7 @@ namespace QFinans.Areas.Api.Controllers
                     return Json(jsonObject, JsonRequestBehavior.AllowGet);
                 }
 
-                if (_user.UserName == userName && _user.Password == password)
+                if (_user.UserName == userName && _user.Password == password && _user.MoneyTransfer == true)
                 {
                     var data = (from d in db.CustomerBankInfo
                                 where d.IsDeleted == false && d.IsActive == true

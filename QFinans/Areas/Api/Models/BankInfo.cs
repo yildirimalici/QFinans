@@ -40,6 +40,20 @@ namespace QFinans.Areas.Api.Models
         [DisplayFormat(DataFormatString = "{0:N2}")]
         public decimal MinAmount { get; set; }
 
+        [Display(Name = "Yatırım İşlem Sayısı")]
+        public int? TransactionCountDeposit { get; set; }
+
+        [Display(Name = "Çekim İşlem Sayısı")]
+        public int? TransactionCountDraw { get; set; }
+
+        [Display(Name = "Bakiye")]
+        [DisplayFormat(DataFormatString = "{0:N2}")]
+        public decimal? Balance { get; set; }
+
+        [Display(Name = "Komisyon")]
+        [DisplayFormat(DataFormatString = "{0:N2}")]
+        public decimal? BankCharge { get; set; }
+
         public bool IsDeleted { get; set; }
 
         public string AddUserId { get; set; }
@@ -50,7 +64,7 @@ namespace QFinans.Areas.Api.Models
 
         public DateTime? UpdateDate { get; set; }
 
-        public ICollection<AccountTransactions> AccountTransactions { get; set; }
+        public ICollection<MoneyTransfer> MoneyTransfer { get; set; }
         public virtual BankType BankType { get; set; }
     }
 }

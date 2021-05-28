@@ -30,5 +30,13 @@ namespace QFinans.Models
         public decimal DepositFreeSum { get; set; }
         public decimal CashInFreeSum { get; set; }
         public decimal TotalFreeSum { get; set; }
+
+        //MoneyTransfer
+        public int BankNewDepositCount { get; set; }
+        public decimal BankNewDepositSum { get; set; }
+        public decimal BankConfirmDepositSum { get; set; }
+        public int BankNewDrawCount { get; set; }
+        public decimal BankNewDrawSum { get; set; }
+        public decimal BankConfirmDrawSum { get; set; }
     }
 }

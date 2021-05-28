@@ -24,6 +24,17 @@ namespace QFinans.Controllers
 
         public ActionResult Index()
         {
+            string _userId = User.Identity.GetUserId();
+            var _user = db.Users.Find(_userId);
+            if (_user.PaparaDashboard == false && _user.HavaleEFtDashboard == false)
+            {
+                return RedirectToAction("UnAuthorized", "CustomAuth");
+            }
+            else if (_user.HavaleEFtDashboard == true && _user.PaparaDashboard == false)
+            {
+                return RedirectToAction("HavaleEft");
+            }
+
             DateTime startDate = DateTime.Now.Date;
             DateTime endDate = DateTime.Now.AddDays(1).Date;
            
@@ -79,6 +90,60 @@ namespace QFinans.Controllers
             return View(accountTransactions);
         }
 
+        public ActionResult HavaleEft()
+        {
+            string _userId = User.Identity.GetUserId();
+            var _user = db.Users.Find(_userId);
+            if (_user.HavaleEFtDashboard == false)
+            {
+                return RedirectToAction("UnAuthorized", "CustomAuth");
+            }
+
+            DateTime startDate = DateTime.Now.Date;
+            DateTime endDate = DateTime.Now.AddDays(1).Date;
+
+            var bankInfo = db.BankInfo.Where(x => x.IsDeleted == false);
+            var moneyTransfer = db.MoneyTransfer.Where(x => x.AddDate >= startDate && x.AddDate < endDate);
+            var deposit = db.MoneyTransfer.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate < endDate);
+            var draw = db.MoneyTransfer.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate < endDate);
+
+            ViewBag.DepositCount = deposit.Count();
+            ViewBag.NewDepositCount = deposit.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
+            ViewBag.ConfirmDepositCount = deposit.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Count();
+            ViewBag.DenyDepositCount = deposit.Where(x => x.TransactionStatus == TransactionStatus.Deny).Count();
+            ViewBag.NewDepositSum = deposit.Where(x => x.TransactionStatus == TransactionStatus.New).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.ConfirmDepositSum = deposit.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.DenyDepositSum = deposit.Where(x => x.TransactionStatus == TransactionStatus.Deny).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+
+            ViewBag.DrawCount = draw.Count();
+            ViewBag.NewDrawCount = draw.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
+            ViewBag.ConfirmDrawCount = draw.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Count();
+            ViewBag.DenyDrawCount = draw.Where(x => x.TransactionStatus == TransactionStatus.Deny).Count();
+            ViewBag.NewDrawSum = draw.Where(x => x.TransactionStatus == TransactionStatus.New).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.ConfirmDrawSum = draw.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.DenyDrawSum = draw.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.DenyDrawSum = draw.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+
+            ViewBag.ActiveAccountCount = bankInfo.Where(x => x.IsPassive == false).Count();
+            ViewBag.ConfirmAccountTransactionCount = moneyTransfer.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Count();
+
+            ViewBag.CashInSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == true).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.CashOutSum = db.CashFlow.Where(x => x.IsDeleted == false && x.IsCashIn == false).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+
+            var activeAccountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false).OrderByDescending(x => x.Id).ToList();
+
+            ViewBag.ActiveAccountInfo = activeAccountInfo;
+
+            var activeBankInfo = db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false).OrderByDescending(x => x.Id).ToList();
+
+            ViewBag.ActiveBankInfo = activeBankInfo;
+
+            ViewBag.StartDate = startDate.ToShortDateString();
+            ViewBag.EndDate = endDate.ToShortDateString();
+
+            return View(moneyTransfer);
+        }
+
         [HttpGet]
         public JsonResult GetDashboardJsonData()
         {
@@ -122,6 +187,17 @@ namespace QFinans.Controllers
 
             ViewBag.ActiveTotalAccountCount = ViewBag.ActivePaparaCount + ViewBag.ActiveBankCount;
 
+            var bankDeposit = db.MoneyTransfer.Where(x => x.Deposit == true && x.AddDate >= startDate && x.AddDate < endDate);
+            var bankDraw = db.MoneyTransfer.Where(x => x.Deposit == false && x.AddDate >= startDate && x.AddDate < endDate);
+
+            ViewBag.BankNewDepositCount = bankDeposit.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
+            ViewBag.BankNewDepositSum = bankDeposit.Where(x => x.TransactionStatus == TransactionStatus.New).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.BankConfirmDepositSum = bankDeposit.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+
+            ViewBag.BankNewDrawCount = bankDraw.Where(x => x.TransactionStatus == TransactionStatus.New).Count();
+            ViewBag.BankNewDrawSum = draw.Where(x => x.TransactionStatus == TransactionStatus.New).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+            ViewBag.BankConfirmDrawSum = bankDraw.Where(x => x.TransactionStatus == TransactionStatus.Confirm).Select(x => x.Amount).DefaultIfEmpty(0).Sum();
+
             DashboardJsonViewModel dashboardJsonViewModel = new DashboardJsonViewModel
             {
                 DepositCount = ViewBag.DepositCount,
@@ -146,7 +222,13 @@ namespace QFinans.Controllers
                 CashOutSum = ViewBag.CashOutSum,
                 DepositFreeSum = ViewBag.DepositFreeSum,
                 CashInFreeSum = ViewBag.CashInFreeSum,
-                TotalFreeSum = ViewBag.DepositFreeSum + ViewBag.CashInFreeSum
+                TotalFreeSum = ViewBag.DepositFreeSum + ViewBag.CashInFreeSum,
+                BankNewDepositCount = ViewBag.BankNewDepositCount,
+                BankNewDepositSum = ViewBag.BankNewDepositSum,
+                BankConfirmDepositSum = ViewBag.BankConfirmDepositSum,
+                BankNewDrawCount = ViewBag.BankNewDrawCount,
+                BankNewDrawSum = ViewBag.BankNewDrawSum,
+                BankConfirmDrawSum = ViewBag.BankConfirmDrawSum
             };
 
             return Json(dashboardJsonViewModel, JsonRequestBehavior.AllowGet);
@@ -236,6 +318,69 @@ namespace QFinans.Controllers
         {
             var accountTransactions = db.AccountTransactions.Where(x => x.NotificationDate == null).ToList();
             accountTransactions.ForEach(y => y.NotificationDate = DateTime.Now);
+            db.SaveChanges();
+            return Json("", JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public JsonResult NotificationShowDataForMoneyTransfer()
+        {
+            var moneyTransfer = db.MoneyTransfer.Where(x => x.TransactionStatus == TransactionStatus.New && x.NotificationDate == null).OrderBy(x => x.Id);
+            if (moneyTransfer.Count() > 0)
+            {
+                var data = moneyTransfer.Select(x => new
+                {
+                    id = x.Id,
+                    username = x.UserName,
+                    deposit = x.Deposit,
+                    amount = x.Amount,
+                    date = x.AddDate.ToString()
+                }).First();
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+            else
+            {
+                IDictionary<string, int> data = new Dictionary<string, int>()
+                                            {
+                                                {"id", 0}
+                                            };
+                return Json(data, JsonRequestBehavior.AllowGet);
+            }
+        }
+
+        [HttpGet]
+        public ActionResult NotificationHideDataForMoneyTransfer(int? id)
+        {
+            if (id == null)
+            {
+                JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                {
+                    type = "error",
+                    message = "Id: " + id.ToString() + " is not found."
+                };
+                return Json(jsonObject);
+            }
+            MoneyTransfer moneyTransfer = db.MoneyTransfer.Find(id);
+            if (moneyTransfer == null)
+            {
+                JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                {
+                    type = "error",
+                    message = "Id: " + id.ToString() + " is not found."
+                };
+                return Json(jsonObject);
+            }
+
+            moneyTransfer.NotificationDate = DateTime.Now;
+            db.SaveChanges();
+            return Json("", JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
+        public ActionResult NotificationHideAllDataForMoneyTransfer()
+        {
+            var moneyTransfer = db.MoneyTransfer.Where(x => x.NotificationDate == null).ToList();
+            moneyTransfer.ForEach(y => y.NotificationDate = DateTime.Now);
             db.SaveChanges();
             return Json("", JsonRequestBehavior.AllowGet);
         }

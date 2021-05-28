@@ -9,7 +9,7 @@ using System.Web.Mvc;
 
 namespace QFinans.Areas.Api.Controllers
 {
-    [Log]
+    [LogJson]
     public class MoneyTransferController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();
@@ -39,9 +39,22 @@ namespace QFinans.Areas.Api.Controllers
                     return Json(jsonObject);
                 }
 
-                if (_user.UserName == userName && _user.Password == password)
+                if (_user.UserName == userName && _user.Password == password && _user.MoneyTransfer == true)
                 {
+                    var userDepositCount = db.MoneyTransfer.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDepositViewModel.UserName).Count();
+                    if (userDepositCount > 0)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = "pending transactions try later"
+                        };
+                        return Json(jsonObject);
+                    }
+
                     var bankTypeId = db.CustomerBankInfo.Find(moneyTransferDepositViewModel.CustomerBankInfoId).BankTypeId;
+                    var minFastLimit = db.SystemParameters.Select(x => x.MinFastLimit).FirstOrDefault();
+                    var maxFastLimit = db.SystemParameters.Select(x => x.MaxFastLimit).FirstOrDefault();
 
                     var currentTime = DateTime.Now.TimeOfDay;
                     var eftStartTime = db.SystemParameters.Select(x => x.EftStartTime).FirstOrDefault();
@@ -51,15 +64,41 @@ namespace QFinans.Areas.Api.Controllers
 
                     var bankInfoEft = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false && x.MinAmount <= moneyTransferDepositViewModel.Amount && x.BankTypeId != bankTypeId).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
+                    var bankInfoFast = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
+
                     BankInfo bankInfo;
+
+                    var _dayOfWeek = (int)DateTime.Now.DayOfWeek;
 
                     if (bankInfoHavale != null)
                     {
                         bankInfo = bankInfoHavale;
                     }
-                    else if (currentTime >= eftStartTime && currentTime <= eftEndTime && bankInfoEft != null)
+                    else if (currentTime >= eftStartTime && currentTime <= eftEndTime && bankInfoEft != null && _dayOfWeek >= 1 && _dayOfWeek <=5)
                     {
                         bankInfo = bankInfoEft;
+                    }
+                    else if (bankInfoHavale == null && moneyTransferDepositViewModel.Amount >= minFastLimit && moneyTransferDepositViewModel.Amount <= maxFastLimit)
+                    {
+                        bankInfo = bankInfoFast;
+                    }
+                    else if ((currentTime < eftStartTime || currentTime > eftEndTime) && bankInfoHavale == null && moneyTransferDepositViewModel.Amount > maxFastLimit)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = "please send a request within eft hours"
+                        };
+                        return Json(jsonObject);
+                    }
+                    else if ((_dayOfWeek == 0 || _dayOfWeek == 6) && bankInfoHavale == null && moneyTransferDepositViewModel.Amount > maxFastLimit)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = "please send a request within eft hours"
+                        };
+                        return Json(jsonObject);
                     }
                     else
                     {
@@ -71,41 +110,54 @@ namespace QFinans.Areas.Api.Controllers
                         return Json(jsonObject);
                     }
 
+                    if (bankInfo == null)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = "there is no available account"
+                        };
+                        return Json(jsonObject);
+                    }
+
                     if (ModelState.IsValid)
                     {
-                        AccountTransactions accountTransactions = new AccountTransactions();
+                        MoneyTransfer moneyTransfer = new MoneyTransfer();
 
                         using (var context = new ApplicationDbContext())
                         {
-                            accountTransactions.UserName = moneyTransferDepositViewModel.UserName;
-                            accountTransactions.Name = moneyTransferDepositViewModel.Name;
-                            accountTransactions.SurName = moneyTransferDepositViewModel.SurName;
-                            accountTransactions.Amount = moneyTransferDepositViewModel.Amount;
-                            accountTransactions.OldAmount = moneyTransferDepositViewModel.Amount;
-                            accountTransactions.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
-                            accountTransactions.Reference = moneyTransferDepositViewModel.Reference;
-                            accountTransactions.Deposit = true;
-                            accountTransactions.IsMoneyTransfer = true;
-                            accountTransactions.TransactionStatus = TransactionStatus.New;
-                            accountTransactions.BankInfoId = bankInfo.Id;
-                            accountTransactions.Location = "api";
-                            accountTransactions.AddUserId = _user.UserName;
-                            accountTransactions.AddDate = DateTime.Now;
-                            context.AccountTransactions.Add(accountTransactions);
+                            moneyTransfer.UserName = moneyTransferDepositViewModel.UserName;
+                            moneyTransfer.Name = moneyTransferDepositViewModel.Name;
+                            moneyTransfer.MiddleName = moneyTransferDepositViewModel.MiddleName;
+                            moneyTransfer.SurName = moneyTransferDepositViewModel.SurName;
+                            moneyTransfer.Amount = moneyTransferDepositViewModel.Amount;
+                            moneyTransfer.OldAmount = moneyTransferDepositViewModel.Amount;
+                            moneyTransfer.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
+                            moneyTransfer.Reference = moneyTransferDepositViewModel.Reference;
+                            moneyTransfer.Deposit = true;
+                            //moneyTransfer.IsMoneyTransfer = true;
+                            moneyTransfer.TransactionStatus = TransactionStatus.New;
+                            moneyTransfer.BankInfoId = bankInfo.Id;
+                            moneyTransfer.Location = "api";
+                            moneyTransfer.AddUserId = _user.UserName;
+                            moneyTransfer.AddDate = DateTime.Now;
+                            context.MoneyTransfer.Add(moneyTransfer);
                             context.SaveChanges();
                         }
-
-                        var data = (from m in db.AccountTransactions
-                                    where m.Id == accountTransactions.Id
+                        
+                        var data = (from m in db.MoneyTransfer
+                                    where m.Id == moneyTransfer.Id
                                     select new
                                     {
                                         id = m.Id,
                                         userName = m.UserName,
                                         name = m.Name,
+                                        middleName = m.MiddleName,
                                         surName = m.SurName,
                                         amount = m.Amount,
                                         accountName = m.BankInfo.Name,
                                         accountSurName = m.BankInfo.Surname,
+                                        bankName = m.BankInfo.BankType.Name,
                                         branchCode = m.BankInfo.BranchCode,
                                         accountNumber = m.BankInfo.AccountNumber,
                                         iban = m.BankInfo.Iban,
@@ -172,46 +224,61 @@ namespace QFinans.Areas.Api.Controllers
                     return Json(jsonObject);
                 }
 
-                if (_user.UserName == userName && _user.Password == password)
+                if (_user.UserName == userName && _user.Password == password && _user.MoneyTransfer == true)
                 {
-                    var userDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDrawViewModel.UserName).Count();
+                    var userDepositCount = db.MoneyTransfer.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDrawViewModel.UserName).Count();
+                    if (userDepositCount > 0)
+                    {
+                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        {
+                            type = "error",
+                            message = "pending transactions try later"
+                        };
+                        return Json(jsonObject);
+                    }
+
+                    var userDrawCount = db.MoneyTransfer.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDrawViewModel.UserName).Count();
 
                     if (userDrawCount == 0)
                     {
+                        
                         if (ModelState.IsValid)
                         {
-                            AccountTransactions accountTransactions = new AccountTransactions();
+                            MoneyTransfer moneyTransfer = new MoneyTransfer();
 
                             using (var context = new ApplicationDbContext())
                             {
-                                accountTransactions.UserName = moneyTransferDrawViewModel.UserName;
-                                accountTransactions.Name = moneyTransferDrawViewModel.Name;
-                                accountTransactions.SurName = moneyTransferDrawViewModel.SurName;
-                                accountTransactions.Amount = moneyTransferDrawViewModel.Amount;
-                                accountTransactions.OldAmount = moneyTransferDrawViewModel.Amount;
-                                accountTransactions.CustomerBankInfoId = moneyTransferDrawViewModel.CustomerBankInfoId;
-                                accountTransactions.CustomerIban = moneyTransferDrawViewModel.CustomerIban;
-                                accountTransactions.Reference = moneyTransferDrawViewModel.Reference;
-                                accountTransactions.Deposit = false;
-                                accountTransactions.IsMoneyTransfer = true;
-                                accountTransactions.TransactionStatus = TransactionStatus.New;
-                                accountTransactions.Location = "api";
-                                accountTransactions.AddUserId = _user.UserName;
-                                accountTransactions.AddDate = DateTime.Now;
-                                context.AccountTransactions.Add(accountTransactions);
+                                moneyTransfer.UserName = moneyTransferDrawViewModel.UserName;
+                                moneyTransfer.Name = moneyTransferDrawViewModel.Name;
+                                moneyTransfer.MiddleName = moneyTransferDrawViewModel.MiddleName;
+                                moneyTransfer.SurName = moneyTransferDrawViewModel.SurName;
+                                moneyTransfer.Amount = moneyTransferDrawViewModel.Amount;
+                                moneyTransfer.OldAmount = moneyTransferDrawViewModel.Amount;
+                                moneyTransfer.CustomerBankInfoId = moneyTransferDrawViewModel.CustomerBankInfoId;
+                                moneyTransfer.CustomerIban = moneyTransferDrawViewModel.CustomerIban;
+                                moneyTransfer.Reference = moneyTransferDrawViewModel.Reference;
+                                moneyTransfer.Deposit = false;
+                                //moneyTransfer.IsMoneyTransfer = true;
+                                moneyTransfer.TransactionStatus = TransactionStatus.New;
+                                moneyTransfer.Location = "api";
+                                moneyTransfer.AddUserId = _user.UserName;
+                                moneyTransfer.AddDate = DateTime.Now;
+                                context.MoneyTransfer.Add(moneyTransfer);
                                 context.SaveChanges();
                             }
 
-                            var data = (from m in db.AccountTransactions
-                                        where m.Id == accountTransactions.Id
+                            var data = (from m in db.MoneyTransfer
+                                        where m.Id == moneyTransfer.Id
                                         select new
                                         {
                                             id = m.Id,
                                             userName = m.UserName,
                                             name = m.Name,
+                                            middleName = m.MiddleName,
                                             surName = m.SurName,
                                             amount = m.Amount,
                                             customerBankInfoId = m.CustomerBankInfoId,
+                                            customerBankName = m.CustomerBankInfo.BankType.Name,
                                             customerIban = m.CustomerIban,
                                             reference = m.Reference
                                         });

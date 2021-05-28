@@ -41,6 +41,36 @@
                 </div>
             </div>
 
+            <div class="form-group row">
+                @Html.LabelFor(model => model.PaparaDashboard, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.PaparaDashboard, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.PaparaDashboard, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.HavaleEFtDashboard, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.HavaleEFtDashboard, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.HavaleEFtDashboard, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsShowCashFlow, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="custom-checkbox">
+                        @Html.EditorFor(model => model.IsShowCashFlow, new { @class = "custom-control-input" })
+                        @Html.ValidationMessageFor(model => model.IsShowCashFlow, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
             <h6 class="card-subtitle mb-2 text-muted mt-4">Yetkiler</h6>
             <div class="custom-control custom-switch mb-3">
                 <input type="checkbox" class="custom-control-input" id="allCheck" onclick="setAllCheck()">
@@ -462,6 +492,30 @@
                         <div class="card-header">CustomerBankInfo</div>
                         <div class="card-body">
                             @foreach (var item in roles.Where(x => x.Name.EndsWith("CustomerBankInfo")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        @if (Model.Roles.Any(x => x.RoleId == item.Id))
+                                        {
+                                            <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name" checked>
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        }
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">MoneyTransfers</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("MoneyTransfers")))
                             {
                                 <div class="col-sm-3">
                                     <div class="custom-control custom-checkbox">

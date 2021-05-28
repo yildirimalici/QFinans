@@ -79,6 +79,15 @@ namespace QFinans.Models
         [Display(Name = "Admin")]
         public bool IsAdmin { get; set; }
 
+        [Display(Name = "Papara Dashboard")]
+        public bool PaparaDashboard { get; set; }
+
+        [Display(Name = "Havale EFT Dashboard")]
+        public bool HavaleEftDashboard { get; set; }
+
+        [Display(Name = "Hesap Hareketlerinin Tamamını Görsün mü?")]
+        public bool IsShowCashFlow { get; set; }
+
         [Required]
         [Display(Name = "Role")]
         public string[] RoleName { get; set; }

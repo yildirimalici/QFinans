@@ -227,6 +227,9 @@
             if (!roleManager.RoleExists("CashFlowReport"))
                 roleManager.Create(new IdentityRole("CashFlowReport"));
 
+            if (!roleManager.RoleExists("DailyMoneyTransferReport"))
+                roleManager.Create(new IdentityRole("DailyMoneyTransferReport"));
+
             //ShiftTypeController
             if (!roleManager.RoleExists("IndexShiftType"))
                 roleManager.Create(new IdentityRole("IndexShiftType"));
@@ -332,6 +335,37 @@
 
             if (!roleManager.RoleExists("DeleteCustomerBankInfo"))
                 roleManager.Create(new IdentityRole("DeleteCustomerBankInfo"));
+
+            //MoneyTransfersController
+            if (!roleManager.RoleExists("DepositMoneyTransfers"))
+                roleManager.Create(new IdentityRole("DepositMoneyTransfers"));
+
+            if (!roleManager.RoleExists("DrawMoneyTransfers"))
+                roleManager.Create(new IdentityRole("DrawMoneyTransfers"));
+
+            if (!roleManager.RoleExists("DetailsMoneyTransfers"))
+                roleManager.Create(new IdentityRole("DetailsMoneyTransfers"));
+
+            if (!roleManager.RoleExists("CreateDepositMoneyTransfers"))
+                roleManager.Create(new IdentityRole("CreateDepositMoneyTransfers"));
+
+            if (!roleManager.RoleExists("CreateDrawMoneyTransfers"))
+                roleManager.Create(new IdentityRole("CreateDrawMoneyTransfers"));
+
+            if (!roleManager.RoleExists("EditMoneyTransfers"))
+                roleManager.Create(new IdentityRole("EditMoneyTransfers"));
+
+            if (!roleManager.RoleExists("ConfirmDepositMoneyTransfers"))
+                roleManager.Create(new IdentityRole("ConfirmDepositMoneyTransfers"));
+
+            if (!roleManager.RoleExists("ConfirmDrawMoneyTransfers"))
+                roleManager.Create(new IdentityRole("ConfirmDrawMoneyTransfers"));
+
+            if (!roleManager.RoleExists("DenyMoneyTransfers"))
+                roleManager.Create(new IdentityRole("DenyMoneyTransfers"));
+
+            if (!roleManager.RoleExists("CallBackApiMoneyTransfers"))
+                roleManager.Create(new IdentityRole("CallBackApiMoneyTransfers"));
         }
     }
 }

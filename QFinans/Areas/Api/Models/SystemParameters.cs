@@ -55,5 +55,11 @@ namespace QFinans.Areas.Api.Models
 
         [Display(Name = "EFT Bitiş Saati")]
         public TimeSpan EftEndTime { get; set; }
+
+        [Display(Name = "Min Fast Limit")]
+        public decimal MinFastLimit { get; set; }
+
+        [Display(Name = "Max Fast Limit")]
+        public decimal MaxFastLimit { get; set; }
     }
 }
