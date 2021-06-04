@@ -71,6 +71,14 @@
             </div>
 
             <div class="form-group row">
+                @Html.LabelFor(model => model.MaxAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.MaxAmount, new { htmlAttributes = new { @class = "form-control" } })
+                    @Html.ValidationMessageFor(model => model.MaxAmount, "", new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group row">
                 @Html.LabelFor(model => model.IsPassive, htmlAttributes: new { @class = "control-label col-md-2" })
                 <div class="col-md-10">
                     <div class="checkbox">
@@ -86,6 +94,26 @@
                     <div class="checkbox">
                         @Html.EditorFor(model => model.IsArchive)
                         @Html.ValidationMessageFor(model => model.IsArchive, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsEft, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.IsEft)
+                        @Html.ValidationMessageFor(model => model.IsEft, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group row">
+                @Html.LabelFor(model => model.IsFast, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-10">
+                    <div class="checkbox">
+                        @Html.EditorFor(model => model.IsFast)
+                        @Html.ValidationMessageFor(model => model.IsFast, "", new { @class = "text-danger" })
                     </div>
                 </div>
             </div>

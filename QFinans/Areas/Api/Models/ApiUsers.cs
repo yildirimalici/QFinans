@@ -32,5 +32,7 @@ namespace QFinans.Areas.Api.Models
         public bool Coinbase { get; set; }
 
         public bool MoneyTransfer { get; set; }
+
+        public bool IsShowLastDepositForPendingDeposit { get; set; }
     }
 }

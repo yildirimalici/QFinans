@@ -97,12 +97,62 @@ namespace QFinans.Areas.Api.Controllers
 
                 if (_user.UserName == userName && _user.Password == password && _user.MoneyTransfer == true)
                 {
+                    var minFastLimit = db.SystemParameters.Select(x => x.MinFastLimit).DefaultIfEmpty(0).FirstOrDefault();
+                    var maxFastLimit = db.SystemParameters.Select(x => x.MaxFastLimit).DefaultIfEmpty(0).FirstOrDefault();
+
+                    var currentTime = DateTime.Now.TimeOfDay;
+                    var eftStartTime = db.SystemParameters.Select(x => x.EftStartTime).FirstOrDefault();
+                    var eftEndTime = db.SystemParameters.Select(x => x.EftEndTime).FirstOrDefault();
+                    var _dayOfWeek = (int)DateTime.Now.DayOfWeek;
+
+                    var _eft = false;
+
+                    if (currentTime >= eftStartTime && currentTime <= eftEndTime && _dayOfWeek >= 1 && _dayOfWeek <= 5)
+                    {
+                        _eft = true;
+                    }
+
                     var data = (from d in db.CustomerBankInfo
                                 where d.IsDeleted == false && d.IsActive == true
                                 select new
                                 {
                                     id = d.Id,
-                                    name = d.BankType.Name
+                                    name = d.BankType.Name,
+                                    minAmount = (
+                                        (
+                                            db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId) == false
+                                            && (_eft ? db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsEft == true) : false) == false
+                                            && db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsFast == true) == true
+                                        ) ?
+                                        minFastLimit :
+                                        (
+                                            (
+                                                db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId) == false
+                                                && (_eft ? db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsEft == true) : false) == true
+                                            ) ?
+                                            db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false).OrderBy(x => x.OrderNumber).Select(x => x.MinAmount).DefaultIfEmpty(0).FirstOrDefault() :
+                                            db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId).OrderBy(x => x.OrderNumber).Select(x => x.MinAmount).DefaultIfEmpty(0).FirstOrDefault()
+                                        )
+                                    ),
+                                    maxAmount = (
+                                        (
+                                            db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId) == false
+                                            && (_eft ? db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsEft == true) : false) == false
+                                            && db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsFast == true) == true
+                                        ) ?
+                                        maxFastLimit :
+                                        (
+                                            (
+                                                db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId) == false
+                                                && (_eft ? db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsEft == true) : false) == true
+                                            ) ?
+                                            db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false).OrderBy(x => x.OrderNumber).Select(x => x.MaxAmount).DefaultIfEmpty(0).FirstOrDefault() :
+                                            db.BankInfo.Where(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId).OrderBy(x => x.OrderNumber).Select(x => x.MaxAmount).DefaultIfEmpty(0).FirstOrDefault()
+                                        )
+                                    ),
+                                    account = db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.BankTypeId == d.BankTypeId),
+                                    eft = _eft ? db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsEft == true) : false,
+                                    fast = db.BankInfo.Any(x => x.IsDeleted == false && x.IsArchive == false && x.IsPassive == false && x.IsFast == true)
                                 });
                     return Json(data.ToList(), JsonRequestBehavior.AllowGet);
                 }

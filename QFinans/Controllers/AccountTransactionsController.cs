@@ -466,6 +466,10 @@ namespace QFinans.Controllers
             {
                 return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
             }
+            else if (Request.Url.Host == "www.iprimepay.com" || Request.Url.Host == "iprimepay.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
+            }
             else
             {
                 TempData["warning"] = "Callback api çalışmadı.";
@@ -565,6 +569,10 @@ namespace QFinans.Controllers
                 //return RedirectToAction("Draw");
             }
             else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
+            }
+            else if (Request.Url.Host == "www.iprimepay.com" || Request.Url.Host == "iprimepay.com")
             {
                 return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
             }
@@ -723,6 +731,10 @@ namespace QFinans.Controllers
                 //return RedirectToAction("Draw");
             }
             else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+            {
+                return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
+            }
+            else if (Request.Url.Host == "www.iprimepay.com" || Request.Url.Host == "iprimepay.com")
             {
                 return RedirectToAction("CallBackApiHashForPppropanel", "AccountTransactions", new { transid = id });
             }

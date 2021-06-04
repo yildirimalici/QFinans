@@ -41,18 +41,44 @@ namespace QFinans.Areas.Api.Controllers
 
                 if (_user.UserName == userName && _user.Password == password && _user.MoneyTransfer == true)
                 {
-                    var userDepositCount = db.MoneyTransfer.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDepositViewModel.UserName).Count();
-                    if (userDepositCount > 0)
+                    var userDeposit = db.MoneyTransfer.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == moneyTransferDepositViewModel.UserName).FirstOrDefault();
+                    if (userDeposit != null)
                     {
-                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        if (_user.IsShowLastDepositForPendingDeposit == true)
                         {
-                            type = "error",
-                            message = "pending transactions try later"
-                        };
-                        return Json(jsonObject);
+                            var data = (from m in db.MoneyTransfer
+                                        where m.Id == userDeposit.Id
+                                        select new
+                                        {
+                                            id = m.Id,
+                                            userName = m.UserName,
+                                            name = m.Name,
+                                            middleName = m.MiddleName,
+                                            surName = m.SurName,
+                                            amount = m.Amount,
+                                            accountName = m.BankInfo.Name,
+                                            accountSurName = m.BankInfo.Surname,
+                                            bankName = m.BankInfo.BankType.Name,
+                                            branchCode = m.BankInfo.BranchCode,
+                                            accountNumber = m.BankInfo.AccountNumber,
+                                            iban = m.BankInfo.Iban,
+                                            reference = m.Reference
+                                        });
+
+                            return Json(data.First());
+                        }
+                        else
+                        {
+                            JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                            {
+                                type = "error",
+                                message = "pending transactions try later"
+                            };
+                            return Json(jsonObject);
+                        }
                     }
 
-                    var bankTypeId = db.CustomerBankInfo.Find(moneyTransferDepositViewModel.CustomerBankInfoId).BankTypeId;
+                    var customerBankInfo = db.CustomerBankInfo.Find(moneyTransferDepositViewModel.CustomerBankInfoId);
                     var minFastLimit = db.SystemParameters.Select(x => x.MinFastLimit).FirstOrDefault();
                     var maxFastLimit = db.SystemParameters.Select(x => x.MaxFastLimit).FirstOrDefault();
 
@@ -60,11 +86,30 @@ namespace QFinans.Areas.Api.Controllers
                     var eftStartTime = db.SystemParameters.Select(x => x.EftStartTime).FirstOrDefault();
                     var eftEndTime = db.SystemParameters.Select(x => x.EftEndTime).FirstOrDefault();
 
-                    var bankInfoHavale = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false && x.MinAmount <= moneyTransferDepositViewModel.Amount && x.BankTypeId == bankTypeId).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
+                    var bankInfoHavale = db.BankInfo.Where(
+                            x => x.IsDeleted == false
+                            && x.IsPassive == false
+                            && x.IsArchive == false
+                            && x.MinAmount <= moneyTransferDepositViewModel.Amount
+                            && x.MaxAmount >= moneyTransferDepositViewModel.Amount
+                            && x.BankTypeId == customerBankInfo.BankTypeId
+                        ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
-                    var bankInfoEft = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false && x.MinAmount <= moneyTransferDepositViewModel.Amount && x.BankTypeId != bankTypeId).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
+                    var bankInfoEft = db.BankInfo.Where(
+                            x => x.IsDeleted == false
+                            && x.IsPassive == false
+                            && x.IsArchive == false
+                            && x.MinAmount <= moneyTransferDepositViewModel.Amount
+                            && x.MaxAmount >= moneyTransferDepositViewModel.Amount
+                            && x.BankTypeId != customerBankInfo.BankTypeId
+                        ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
-                    var bankInfoFast = db.BankInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
+                    var bankInfoFast = db.BankInfo.Where(
+                            x => x.IsDeleted == false
+                            && x.IsPassive == false
+                            && x.IsArchive == false
+                            && x.IsFast == true
+                        ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
                     BankInfo bankInfo;
 

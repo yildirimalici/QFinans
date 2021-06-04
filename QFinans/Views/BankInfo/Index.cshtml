@@ -65,6 +65,9 @@
                         Iban
                     </th>
                     <th>Min Tutar</th>
+                    <th>Max Tutar</th>
+                    <th>EFT</th>
+                    <th>Fast</th>
                     <th>Sıra No</th>
                     <th>
                         Durum
@@ -100,8 +103,35 @@
                             @Html.DisplayFor(modelItem => item.MinAmount)
                         </td>
                         <td>
+                            @Html.DisplayFor(modelItem => item.MaxAmount)
+                        </td>
+                        
+                        <td>
+                            @if (item.IsEft == true)
+                            {
+                                <span class="badge badge-success">Kabul Ediyor</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Kabul Etmiyor</span>
+                            }
+                        </td>
+
+                        <td>
+                            @if (item.IsFast == true)
+                            {
+                                <span class="badge badge-success">Kabul Ediyor</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Kabul Etmiyor</span>
+                            }
+                        </td>
+
+                        <td>
                             @Html.DisplayFor(modelItem => item.OrderNumber)
                         </td>
+
                         <td>
                             @if (item.IsPassive == false)
                             {

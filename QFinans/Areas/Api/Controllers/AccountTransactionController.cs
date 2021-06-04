@@ -52,16 +52,43 @@ namespace QFinans.Areas.Api.Controllers
                     NumberFormatInfo nfi = new NumberFormatInfo();
                     nfi.NumberDecimalSeparator = ".";
 
-                    var userDepositCount = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName).Count();
-                    if (userDepositCount > 0)
+                    var userDeposit = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName).FirstOrDefault();
+                    if (userDeposit != null)
                     {
-                        JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                        if (_user.IsShowLastDepositForPendingDeposit == true)
                         {
-                            type = "error",
-                            message = "pending transactions try later"
-                        };
-                        return Json(jsonObject);
-                    } else
+                            string _qr_url = "https://" + Request.Url.Host + "/Home/GetQR/" + userDeposit.Id.ToString();
+
+                            var data = (from h in db.AccountTransactions
+                                        where h.Id == userDeposit.Id
+                                        select new
+                                        {
+                                            id = h.Id,
+                                            userName = h.UserName,
+                                            name = h.Name,
+                                            middleName = h.MiddleName,
+                                            surName = h.SurName,
+                                            amount = h.Amount,
+                                            accountNumber = h.AccountInfo.AccountNumber,
+                                            accountName = h.AccountInfo.Name,
+                                            accountSurName = h.AccountInfo.SurName,
+                                            reference = h.Reference,
+                                            qrUrl = _qr_url
+                                        });
+
+                            return Json(data.First());
+                        }
+                        else
+                        {
+                            JsonObjectViewModel jsonObject = new JsonObjectViewModel
+                            {
+                                type = "error",
+                                message = "pending transactions try later"
+                            };
+                            return Json(jsonObject);
+                        }
+                    }
+                    else
                     {
                         DateTime date = DateTime.Now.Date;
                         DateTime startDate = new DateTime(date.Year, date.Month, 1);

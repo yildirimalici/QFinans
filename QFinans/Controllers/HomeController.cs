@@ -149,9 +149,9 @@ namespace QFinans.Controllers
         {
             DateTime startDate = DateTime.Now.Date;
             DateTime endDate = DateTime.Now.AddDays(1).Date;
+            var account = db.AccountInfo.Where(x => x.IsDeleted == false);
             var deposit = db.AccountTransactions.Where(x => x.Deposit == true && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
             var draw = db.AccountTransactions.Where(x => x.Deposit == false && x.IsCoin == false && x.IsMoneyTransfer == false && x.AddDate >= startDate && x.AddDate < endDate);
-            var account = db.AccountInfo.Where(x => x.IsDeleted == false);
 
             if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")
             {
@@ -236,7 +236,7 @@ namespace QFinans.Controllers
 
         public JsonResult GetBalanceJsonData()
         {
-            IQueryable<AccountInfo> accountInfo = db.AccountInfo.Where(a => a.IsDeleted == false);
+            IQueryable<AccountInfo> accountInfo = db.AccountInfo.Where(a => a.IsDeleted == false && a.IsArchive == false);
             IQueryable<AccountTransactions> accountTransactions = db.AccountTransactions.Where(x => x.IsCoin == false && x.IsMoneyTransfer == false && x.TransactionStatus == TransactionStatus.Confirm);
 
             if (Request.Url.Host == "www.qfinans.com" || Request.Url.Host == "qfinans.com")

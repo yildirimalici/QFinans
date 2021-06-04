@@ -40,6 +40,16 @@ namespace QFinans.Areas.Api.Models
         [DisplayFormat(DataFormatString = "{0:N2}")]
         public decimal MinAmount { get; set; }
 
+        [Display(Name = "Maksimum Tutar")]
+        [DisplayFormat(DataFormatString = "{0:N2}")]
+        public decimal MaxAmount { get; set; }
+
+        [Display(Name = "Eft Kabul Ediyormu")]
+        public bool IsEft { get; set; }
+
+        [Display(Name = "Fast Kabul Ediyormu")]
+        public bool IsFast { get; set; }
+
         [Display(Name = "Yatırım İşlem Sayısı")]
         public int? TransactionCountDeposit { get; set; }
 

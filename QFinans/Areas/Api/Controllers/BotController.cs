@@ -29,7 +29,7 @@ namespace QFinans.Areas.Api.Controllers
                 var headers = req.Headers;
                 Guid key = new Guid(headers["Key"]);
                 string userName = headers["UserName"];
-                string password = headers["Password"];
+                string password = headers["Password"]; 
                 string job = headers["Job"];
 
                 var _user = db.ApiUsers.Where(x => x.Key == key).FirstOrDefault();
@@ -150,6 +150,10 @@ namespace QFinans.Areas.Api.Controllers
                     {
                         result = CallBackApiHashWebRequestForPppropanelForBot(transaction.Id);
                     }
+                    else if (Request.Url.Host == "www.iprimepay.com" || Request.Url.Host == "iprimepay.com")
+                    {
+                        result = CallBackApiHashWebRequestForPppropanelForBot(transaction.Id);
+                    }
                     else
                     {
                         result = "Callback api çalışmadı.";
@@ -236,6 +240,10 @@ namespace QFinans.Areas.Api.Controllers
                         result = CallBackApiHashWebRequestForBot(transaction.Id);
                     }
                     else if (Request.Url.Host == "www.pppropanel.com" || Request.Url.Host == "pppropanel.com")
+                    {
+                        result = CallBackApiHashWebRequestForPppropanelForBot(transaction.Id);
+                    }
+                    else if (Request.Url.Host == "www.iprimepay.com" || Request.Url.Host == "iprimepay.com")
                     {
                         result = CallBackApiHashWebRequestForPppropanelForBot(transaction.Id);
                     }
