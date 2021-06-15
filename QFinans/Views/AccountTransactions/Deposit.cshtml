@@ -14,7 +14,7 @@
     var _cashOutAll = db.CashFlow.Where(c => c.IsDeleted == false && c.IsCashIn == false);
     var _timeNow = DateTime.Now.AddMinutes(-30);
     var _lastOneHourDeposit = db.AccountTransactions.Where(x => x.Deposit == true && x.AddDate >= _timeNow).ToList();
-    var _accountInfo = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsArchive == false).ToList();
+    var _accountInfo = db.AccountInfo.Where(x => x.IsDeleted == false).ToList();
 
     if (ViewBag.CurrentDateFrom != null)
     {
@@ -235,7 +235,7 @@
                                 <span class="d-block">@item.BankInfoId - @item.Name @item.SurName</span>
                             }
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" title="@Html.DisplayFor(modelItem => item.ResponseMessage)">
                             <span class="d-block">@Html.DisplayFor(modelItem => item.AddDate)</span>
                             <span class="d-block">@Html.DisplayFor(modelItem => item.ResponseDate)</span>
                         </td>

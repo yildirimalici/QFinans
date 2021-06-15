@@ -52,15 +52,15 @@ namespace QFinans.Areas.Api.Controllers
                     NumberFormatInfo nfi = new NumberFormatInfo();
                     nfi.NumberDecimalSeparator = ".";
 
-                    var userDeposit = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName).FirstOrDefault();
-                    if (userDeposit != null)
+                    var userDepositId = db.AccountTransactions.Where(x => x.Deposit == true && x.TransactionStatus == TransactionStatus.New && x.UserName == depositViewModel.UserName).Select(x => x.Id).DefaultIfEmpty(0).FirstOrDefault();
+                    if (userDepositId > 0)
                     {
                         if (_user.IsShowLastDepositForPendingDeposit == true)
                         {
-                            string _qr_url = "https://" + Request.Url.Host + "/Home/GetQR/" + userDeposit.Id.ToString();
+                            string _qr_url = "https://" + Request.Url.Host + "/Home/GetQR/" + userDepositId.ToString();
 
                             var data = (from h in db.AccountTransactions
-                                        where h.Id == userDeposit.Id
+                                        where h.Id == userDepositId
                                         select new
                                         {
                                             id = h.Id,
@@ -99,23 +99,66 @@ namespace QFinans.Areas.Api.Controllers
                         var emergencyAccountId = db.SystemParameters.Select(x => (x.EmergencyAccountId == null ? 0 : x.EmergencyAccountId)).FirstOrDefault() ?? 0;
                         var freeFirstDifferentUserNumber = db.SystemParameters.Select(x => (x.FreeFirstDifferentUserNumber == null ? 0 : x.FreeFirstDifferentUserNumber)).FirstOrDefault() ?? 0;
 
-                        var accountInfos = db.AccountInfo.Where(x => x.IsDeleted == false && x.IsPassive == false && x.IsArchive == false
+                        var accountInfos = db.AccountInfo.Where(
+                            x => x.IsDeleted == false
+                            && x.IsPassive == false
+                            && x.IsArchive == false
+                            && x.AccountInfoType.TransactionLimit > (
+                                x.AccountTransactions.Where(
+                                        t => t.Deposit == true
+                                        && t.AddDate >= startDate
+                                        && t.AddDate <= endDate
+                                        && t.TransactionStatus != TransactionStatus.Deny
+                                    ).Select(t => t.Id).Count()
+                                   + x.CashFlow.Where(
+                                            a => a.IsDeleted == false
+                                            && a.IsCashIn == true
+                                            && a.TransactionDate >= startDate
+                                            && a.TransactionDate <= endDate
+                                            && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)
+                                       ).Select(a => a.Id).Count()
+                                )
 
-                                                                && x.AccountInfoType.TransactionLimit > (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate && (t.TransactionStatus == TransactionStatus.New || t.TransactionStatus == TransactionStatus.Confirm)).Count()
-                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)).Count())
+                                && x.AccountInfoType.AmountLimit > (
+                                    x.AccountTransactions.Where(
+                                            t => t.Deposit == true
+                                            && t.AddDate >= startDate
+                                            && t.AddDate <= endDate
+                                            && t.TransactionStatus != TransactionStatus.Deny
+                                        ).Select(t => t.Amount).DefaultIfEmpty(0).Sum()
+                                    + x.CashFlow.Where(
+                                            a => a.IsDeleted == false
+                                            && a.IsCashIn == true
+                                            && a.TransactionDate >= startDate
+                                            && a.TransactionDate <= endDate
+                                        ).Select(a => a.Amount).DefaultIfEmpty(0).Sum()
+                                    + depositViewModel.Amount
+                                )
+                            );
 
-                                                                && x.AccountInfoType.AmountLimit > (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate && (t.TransactionStatus != TransactionStatus.Deny)).Select(t => t.Amount).DefaultIfEmpty(0).Sum()
-                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate).Select(a => a.Amount).DefaultIfEmpty(0).Sum()
-                                                                + depositViewModel.Amount)
-                                                            );
+                        var redirectAccountInfo = accountInfos.Where(
+                                x => x.AccountAmountRedirect.MinAmount <= depositViewModel.Amount
+                                && x.AccountAmountRedirect.MaxAmount >= depositViewModel.Amount
+                            ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
-                        var redirectAccountInfo = accountInfos.Where(x => x.AccountAmountRedirect.MinAmount <= depositViewModel.Amount && depositViewModel.Amount <= x.AccountAmountRedirect.MaxAmount).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
-
-                        var freeAccountInfo = accountInfos.Where(x => x.AccountAmountRedirectId == null && (x.AccountTransactions.Where(t => t.Deposit == true && t.AddDate >= startDate && t.AddDate <= endDate
-                                                            && (t.TransactionStatus == TransactionStatus.New || t.TransactionStatus == TransactionStatus.Confirm)).Count()
-                                                                + x.CashFlow.Where(a => a.IsDeleted == false && a.IsCashIn == true && a.TransactionDate >= startDate && a.TransactionDate <= endDate && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)).Count()) < freeTransactionNumber
-
-                                                            ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
+                        var freeAccountInfo = accountInfos.Where(
+                                x => x.AccountAmountRedirectId == null
+                                && (
+                                    x.AccountTransactions.Where(
+                                            t => t.Deposit == true
+                                            && t.AddDate >= startDate
+                                            && t.AddDate <= endDate
+                                            && t.TransactionStatus != TransactionStatus.Deny
+                                        ).Select(t => t.Id).Count()
+                                    + x.CashFlow.Where(
+                                            a => a.IsDeleted == false
+                                            && a.IsCashIn == true
+                                            && a.TransactionDate >= startDate
+                                            && a.TransactionDate <= endDate
+                                            && (a.CashFlowType.IsTransactionCount == true || a.CashFlowTypeId == null)
+                                        ).Select(a => a.Id).Count()
+                                ) < freeTransactionNumber
+                            ).OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
 
 
                         var accountInfo = accountInfos.OrderBy(x => x.OrderNumber).ThenBy(x => x.Id).FirstOrDefault();
@@ -124,6 +167,22 @@ namespace QFinans.Areas.Api.Controllers
 
                         if (accountInfo == null)
                         {
+                            using (var dbContext = new ApplicationDbContext())
+                            {
+                                UnRecordedDeposit unRecordedDeposit = new UnRecordedDeposit();
+                                unRecordedDeposit.UserName = depositViewModel.UserName;
+                                unRecordedDeposit.Name = depositViewModel.Name;
+                                unRecordedDeposit.MiddleName = depositViewModel.MiddleName;
+                                unRecordedDeposit.SurName = depositViewModel.SurName;
+                                unRecordedDeposit.Amount = depositViewModel.Amount;
+                                //unRecordedDeposit.CustomerBankInfoId = depositViewModel.CustomerBankInfoId;
+                                unRecordedDeposit.Papara = true;
+                                unRecordedDeposit.MoneyTransfer = false;
+                                unRecordedDeposit.AddDate = DateTime.Now;
+                                unRecordedDeposit.AddUserId = _user.UserName;
+                                dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
+                                dbContext.SaveChanges();
+                            }
                             JsonObjectViewModel jsonObject = new JsonObjectViewModel
                             {
                                 type = "error",
@@ -170,8 +229,21 @@ namespace QFinans.Areas.Api.Controllers
                                 accountTransactions.AddDate = DateTime.Now;
 
                                 //accountInfo.TransactionCount += 1;
-                                var _cashIn = db.CashFlow.Where(x => x.IsDeleted == false && x.AccountInfoId == accountTransactions.AccountInfoId && x.IsCashIn == true && x.TransactionDate >= startDate && x.TransactionDate <= endDate).OrderBy(x => x.TransactionDate).Take(freeFirstDifferentUserNumber).Count();
-                                var _deposits = db.AccountTransactions.Where(x => x.AccountInfoId == accountTransactions.AccountInfoId && x.Deposit == true && x.AddDate >= startDate && x.AddDate <= endDate && (x.TransactionStatus == TransactionStatus.New || x.TransactionStatus == TransactionStatus.Confirm)).OrderBy(x => x.AddDate);
+                                var _cashIn = db.CashFlow.Where(
+                                        x => x.IsDeleted == false
+                                        && x.AccountInfoId == accountTransactions.AccountInfoId
+                                        && x.IsCashIn == true
+                                        && x.TransactionDate >= startDate
+                                        && x.TransactionDate <= endDate
+                                    ).OrderBy(x => x.TransactionDate).Select(x => x.Id).Take(freeFirstDifferentUserNumber).Count();
+
+                                var _deposits = db.AccountTransactions.Where(
+                                        x => x.AccountInfoId == accountTransactions.AccountInfoId
+                                        && x.Deposit == true
+                                        && x.AddDate >= startDate
+                                        && x.AddDate <= endDate
+                                        && x.TransactionStatus != TransactionStatus.Deny
+                                    ).OrderBy(x => x.AddDate);
                                 var _users = _deposits.GroupBy(x => x.UserName).Select(g => new { name = g.Key, count = g.Count(), date = g.Select(x => x.AddDate).Min() }).OrderBy(x => x.date).Take(freeFirstDifferentUserNumber - _cashIn);
 
                                 if (_users.Count() == 0)
@@ -278,8 +350,8 @@ namespace QFinans.Areas.Api.Controllers
                     NumberFormatInfo nfi = new NumberFormatInfo();
                     nfi.NumberDecimalSeparator = ".";
 
-                    var userDrawCount = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.New && x.UserName == drawViewModel.UserName).Count();
-                    if (userDrawCount == 0)
+                    var userDrawId = db.AccountTransactions.Where(x => x.Deposit == false && x.TransactionStatus == TransactionStatus.New && x.UserName == drawViewModel.UserName).Select(x => x.Id).FirstOrDefault();
+                    if (userDrawId == 0)
                     {
                         AccountTransactions accountTransactions = new AccountTransactions();
 

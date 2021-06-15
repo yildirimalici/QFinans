@@ -1,18 +1,6 @@
-﻿@model IEnumerable<QFinans.Models.DailyTansactionReportSumViewModel>
-
+﻿@model IEnumerable<QFinans.Areas.Api.Models.UnRecordedDeposit>
 @{
-    ViewBag.Title = "DailyTransactionReport";
-
-    var data = Model.GroupBy(x => new { x.Year, x.Month }).Select(g => new
-    {
-        year = g.Key.Year,
-        month = g.Key.Month,
-        date = new DateTime(g.Key.Year, g.Key.Month, 1),
-        confirmDepositCount = g.Sum(x => x.ConfirmDepositCount),
-        confirmDepositSum = g.Sum(x => x.ConfirmDepositSum),
-        confirmDrawCount = g.Sum(x => x.ConfirmDrawCount),
-        confirmDrawSum = g.Sum(x => x.ConfirmDrawSum)
-    });
+    ViewBag.Title = "UnRecordedDeposit";
 
     if (ViewBag.CurrentDateFrom != null)
     {
@@ -23,12 +11,12 @@
     {
         ViewBag.CurrentDateTo = ViewBag.CurrentDateTo.ToString("yyyy-MM-dd");
     }
-
 }
+
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">Günlük İşlem Raporu @ViewBag.CurrentOrganization</h5>
+        <h5 class="card-title">Hesap Verilemeyen Yatırımlar</h5>
         <hr />
 
         @using (Html.BeginForm("Index", "Report", FormMethod.Get, new { @id = "formSearch" }))
@@ -44,7 +32,7 @@
                     @Html.TextBox("DateTo", ViewBag.CurrentDateTo as string, new { @class = "form-control form-control-sm", @Type = "date" })
                 </div>
 
-                
+
 
                 <div class="col-md-2">
                     <div class="d-flex flex-row-reverse">
@@ -60,31 +48,32 @@
                 <thead>
                     <tr>
                         <th>Tarih</th>
-                        <th>Onaylı Yatırım Sayısı</th>
-                        <th>Onaylı Yatırım Tutarı</th>
-                        <th>Onaylı Çekim Sayısı</th>
-                        <th>Onaylı Çekim Tutarı</th>
+                        <th>Kullanıcı Adı</th>
+                        <th>İsim</th>
+                        <th>Soyisim</th>
+                        <th>Tutar</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td class="text-center">@(Convert.ToDateTime((item.Day + "." + item.Month + "." + item.Year)).ToShortDateString())</td>
-                            <td class="text-right">@item.ConfirmDepositCount.ToString("N0")</td>
-                            <td class="text-right">@item.ConfirmDepositSum.ToString("N2")</td>
-                            <td class="text-right">@item.ConfirmDrawCount.ToString("N0")</td>
-                            <td class="text-right">@item.ConfirmDrawSum.ToString("N2")</td>
+                            <td>@item.AddDate</td>
+                            <td class="text-right">@item.UserName</td>
+                            <td class="text-right">@item.Name</td>
+                            <td class="text-right">@item.SurName</td>
+                            <td class="text-right">@item.Amount.ToString("N2")</td>
                         </tr>
                     }
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th>Toplam</th>
-                        <th class="text-right">@Model.Sum(x => x.ConfirmDepositCount).ToString("N0")</th>
-                        <th class="text-right">@Model.Sum(x => x.ConfirmDepositSum).ToString("N2")</th>
-                        <th class="text-right">@Model.Sum(x => x.ConfirmDrawCount).ToString("N0")</th>
-                        <th class="text-right">@Model.Sum(x => x.ConfirmDrawSum).ToString("N2")</th>
+                        <th>Toplam Adet</th>
+                        <th class="text-right" colspan="4">@Model.Select(x => x.Id).Count().ToString("N0")</th>
+                    </tr>
+                    <tr>
+                        <th>Toplam Tutar</th>
+                        <th class="text-right" colspan="4">@Model.Sum(x => x.Amount).ToString("N2")</th>
                     </tr>
                 </tfoot>
             </table>

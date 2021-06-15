@@ -174,7 +174,7 @@
                             <span class="d-block">@Html.DisplayFor(modelItem => item.BankInfo.Id) - @Html.DisplayFor(modelItem => item.BankInfo.Name) @Html.DisplayFor(modelItem => item.BankInfo.Surname)</span>
                             <span class="d-block">@Html.DisplayFor(modelItem => item.BankInfo.BankType.Name)</span>
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" title="@Html.DisplayFor(modelItem => item.ResponseMessage)">
                             <span class="d-block">@Html.DisplayFor(modelItem => item.AddDate)</span>
                             <span class="d-block">@Html.DisplayFor(modelItem => item.ResponseDate)</span>
                         </td>

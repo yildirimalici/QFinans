@@ -94,5 +94,7 @@ namespace QFinans.Models
         public DbSet<CustomerBankInfo> CustomerBankInfo { get; set; }
 
         public DbSet<CallbackUrl> CallbackUrl { get; set; }
+
+        public DbSet<UnRecordedDeposit> UnRecordedDeposit { get; set; }
     }
 }

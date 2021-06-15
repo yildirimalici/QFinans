@@ -185,7 +185,7 @@
                                 <button type="button" class="btn btn-xs btn-primary mb-1" data-toggle="modal" data-target="#qrModal-@item.Id"><i class="fas fa-qrcode"></i></button>
                             }*@
                         </td>
-                        <td class="text-center">
+                        <td class="text-center" title="@Html.DisplayFor(modelItem => item.ResponseMessage)">
                             <span class="d-block">@Html.DisplayFor(modelItem => item.AddDate)</span>
                             <span class="d-block">@Html.DisplayFor(modelItem => item.ResponseDate)</span>
                         </td>

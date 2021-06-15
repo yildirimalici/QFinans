@@ -1,0 +1,41 @@
+﻿@model IEnumerable<QFinans.Areas.Api.Models.AccountTransactions>
+
+@{
+    ViewBag.Title = "AccountTransactionDetails";
+
+    if (ViewBag.Date != null)
+    {
+        ViewBag.Date = ViewBag.Date.ToString("yyyy-MM-dd");
+    }
+}
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Günlük İşlem Detay Raporu @ViewBag.Organization</h5>
+        <hr />
+
+        @using (Html.BeginForm("AccountTransactionToExcel", "Report", FormMethod.Get, new { @id = "formSearch" }))
+        {
+            <input name="Tip" type="hidden" value="EXCEL">
+            <input name="Organization" type="hidden" value="@ViewBag.Organization">
+            <div class="row mb-4 align-items-end">
+                <div class="col-md-6">
+                    <label>Tarih</label>
+                    @Html.TextBox("Date", ViewBag.Date as string, new { @class = "form-control form-control-sm", @Type = "date", @required = "required" })
+                </div>
+
+                <div class="col-md-6">
+                    <label>İşlem Türü</label>
+                    <select class="form-control form-control-sm" id="selectDeposit" name="deposit" required>
+                        <option value="">Seçiniz</option>
+                        <option value="true">Yatırım</option>
+                        <option value="false">Çekim</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="btn btn-success btn-block" type="submit"><i class="fas fa-file-excel"></i> Excel</button>
+        }
+
+    </div>
+</div>

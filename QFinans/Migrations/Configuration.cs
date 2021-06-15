@@ -230,6 +230,15 @@
             if (!roleManager.RoleExists("DailyMoneyTransferReport"))
                 roleManager.Create(new IdentityRole("DailyMoneyTransferReport"));
 
+            if (!roleManager.RoleExists("UnRecordedPaparaDepositReport"))
+                roleManager.Create(new IdentityRole("UnRecordedPaparaDepositReport"));
+
+            if (!roleManager.RoleExists("UnRecordedMoneyTransferDepositReport"))
+                roleManager.Create(new IdentityRole("UnRecordedMoneyTransferDepositReport"));
+
+            if (!roleManager.RoleExists("AccountTransactionDetailsReport"))
+                roleManager.Create(new IdentityRole("AccountTransactionDetailsReport"));
+
             //ShiftTypeController
             if (!roleManager.RoleExists("IndexShiftType"))
                 roleManager.Create(new IdentityRole("IndexShiftType"));

@@ -129,24 +129,75 @@ namespace QFinans.Areas.Api.Controllers
                     }
                     else if ((currentTime < eftStartTime || currentTime > eftEndTime) && bankInfoHavale == null && moneyTransferDepositViewModel.Amount > maxFastLimit)
                     {
+                        using (var dbContext = new ApplicationDbContext())
+                        {
+                            UnRecordedDeposit unRecordedDeposit = new UnRecordedDeposit();
+                            unRecordedDeposit.UserName = moneyTransferDepositViewModel.UserName;
+                            unRecordedDeposit.Name = moneyTransferDepositViewModel.Name;
+                            unRecordedDeposit.MiddleName = moneyTransferDepositViewModel.MiddleName;
+                            unRecordedDeposit.SurName = moneyTransferDepositViewModel.SurName;
+                            unRecordedDeposit.Amount = moneyTransferDepositViewModel.Amount;
+                            unRecordedDeposit.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
+                            unRecordedDeposit.Papara = false;
+                            unRecordedDeposit.MoneyTransfer = true;
+                            unRecordedDeposit.AddDate = DateTime.Now;
+                            unRecordedDeposit.AddUserId = _user.UserName;
+                            dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
+                            dbContext.SaveChanges();
+                        }
+
                         JsonObjectViewModel jsonObject = new JsonObjectViewModel
                         {
                             type = "error",
-                            message = "please send a request within eft hours"
+                            message = "there is no available account"
                         };
                         return Json(jsonObject);
                     }
                     else if ((_dayOfWeek == 0 || _dayOfWeek == 6) && bankInfoHavale == null && moneyTransferDepositViewModel.Amount > maxFastLimit)
                     {
+                        using (var dbContext = new ApplicationDbContext())
+                        {
+                            UnRecordedDeposit unRecordedDeposit = new UnRecordedDeposit();
+                            unRecordedDeposit.UserName = moneyTransferDepositViewModel.UserName;
+                            unRecordedDeposit.Name = moneyTransferDepositViewModel.Name;
+                            unRecordedDeposit.MiddleName = moneyTransferDepositViewModel.MiddleName;
+                            unRecordedDeposit.SurName = moneyTransferDepositViewModel.SurName;
+                            unRecordedDeposit.Amount = moneyTransferDepositViewModel.Amount;
+                            unRecordedDeposit.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
+                            unRecordedDeposit.Papara = false;
+                            unRecordedDeposit.MoneyTransfer = true;
+                            unRecordedDeposit.AddDate = DateTime.Now;
+                            unRecordedDeposit.AddUserId = _user.UserName;
+                            dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
+                            dbContext.SaveChanges();
+                        }
+
                         JsonObjectViewModel jsonObject = new JsonObjectViewModel
                         {
                             type = "error",
-                            message = "please send a request within eft hours"
+                            message = "there is no available account"
                         };
                         return Json(jsonObject);
                     }
                     else
                     {
+                        using (var dbContext = new ApplicationDbContext())
+                        {
+                            UnRecordedDeposit unRecordedDeposit = new UnRecordedDeposit();
+                            unRecordedDeposit.UserName = moneyTransferDepositViewModel.UserName;
+                            unRecordedDeposit.Name = moneyTransferDepositViewModel.Name;
+                            unRecordedDeposit.MiddleName = moneyTransferDepositViewModel.MiddleName;
+                            unRecordedDeposit.SurName = moneyTransferDepositViewModel.SurName;
+                            unRecordedDeposit.Amount = moneyTransferDepositViewModel.Amount;
+                            unRecordedDeposit.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
+                            unRecordedDeposit.Papara = false;
+                            unRecordedDeposit.MoneyTransfer = true;
+                            unRecordedDeposit.AddDate = DateTime.Now;
+                            unRecordedDeposit.AddUserId = _user.UserName;
+                            dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
+                            dbContext.SaveChanges();
+                        }
+
                         JsonObjectViewModel jsonObject = new JsonObjectViewModel
                         {
                             type = "error",
@@ -157,6 +208,23 @@ namespace QFinans.Areas.Api.Controllers
 
                     if (bankInfo == null)
                     {
+                        using (var dbContext = new ApplicationDbContext())
+                        {
+                            UnRecordedDeposit unRecordedDeposit = new UnRecordedDeposit();
+                            unRecordedDeposit.UserName = moneyTransferDepositViewModel.UserName;
+                            unRecordedDeposit.Name = moneyTransferDepositViewModel.Name;
+                            unRecordedDeposit.MiddleName = moneyTransferDepositViewModel.MiddleName;
+                            unRecordedDeposit.SurName = moneyTransferDepositViewModel.SurName;
+                            unRecordedDeposit.Amount = moneyTransferDepositViewModel.Amount;
+                            unRecordedDeposit.CustomerBankInfoId = moneyTransferDepositViewModel.CustomerBankInfoId;
+                            unRecordedDeposit.Papara = false;
+                            unRecordedDeposit.MoneyTransfer = true;
+                            unRecordedDeposit.AddDate = DateTime.Now;
+                            unRecordedDeposit.AddUserId = _user.UserName;
+                            dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
+                            dbContext.SaveChanges();
+                        }
+
                         JsonObjectViewModel jsonObject = new JsonObjectViewModel
                         {
                             type = "error",

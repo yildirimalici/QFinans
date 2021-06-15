@@ -141,6 +141,14 @@
                                     <a class="dropdown-item" href="@Url.Action("Index", "Report", new { organization = "Coinbase" })">Günlük İşlem Raporu Coinbase</a>
                                 }
 
+                                @if (User.IsInRole("AccountTransactionDetailsReport"))
+                                {
+                                    foreach (var item in _organization)
+                                    {
+                                        <a class="dropdown-item" href="@Url.Action("AccountTransactionDetails", "Report", new { organization = item.Organization })">Günlük İşlem Detay Raporu @item.Organization</a>
+                                    }
+                                }
+
                                 @if (User.IsInRole("MonthlyReport"))
                                 {
                                     <a class="dropdown-item" href="@Url.Action("Monthly", "Report")">Aylık İşlem Raporu</a>
@@ -159,6 +167,16 @@
                                 @if (User.IsInRole("DailyMoneyTransferReport"))
                                 {
                                     <a class="dropdown-item" href="@Url.Action("DailyMoneyTransfer", "Report")">Günlük İşlem Raporu (H/EFT)</a>
+                                }
+
+                                @if (User.IsInRole("UnRecordedPaparaDepositReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("UnRecordedPaparaDeposit", "Report")">Hesap Verilemeyen Yatırımlar</a>
+                                }
+
+                                @if (User.IsInRole("UnRecordedMoneyTransferDepositReport"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("UnRecordedMoneyTransferDeposit", "Report")">Hesap Verilemeyen Yatırımlar (H/EFT)</a>
                                 }
                             </div>
                         </li>

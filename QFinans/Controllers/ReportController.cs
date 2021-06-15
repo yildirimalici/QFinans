@@ -1,8 +1,10 @@
-﻿using QFinans.Areas.Api.Models;
+﻿using Microsoft.Reporting.WebForms;
+using QFinans.Areas.Api.Models;
 using QFinans.CustomFilters;
 using QFinans.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -258,12 +260,12 @@ namespace QFinans.Controllers
             if (dateFrom == null) { dateFrom = currentDateFrom; }
             ViewBag.CurrentDateFrom = dateFrom;
             if (dateFrom.HasValue)
-                cashFlow = cashFlow.Where(x => x.AddDate >= dateFrom);
+                cashFlow = cashFlow.Where(x => x.TransactionDate >= dateFrom);
 
             if (dateTo == null) { dateTo = currentDateTo; }
             ViewBag.CurrentDateTo = dateTo;
             if (dateTo.HasValue)
-                cashFlow = cashFlow.Where(x => x.AddDate <= dateTo);
+                cashFlow = cashFlow.Where(x => x.TransactionDate <= dateTo);
 
             if (type == null) { type = currentType; }
             ViewBag.CurrentType = type;
@@ -273,12 +275,12 @@ namespace QFinans.Controllers
                 else
                     cashFlow = cashFlow.Where(x => x.CashFlowTypeId == type);
 
-            var data = cashFlow.OrderByDescending(x => x.AddDate).Select(x => new
+            var data = cashFlow.OrderByDescending(x => x.TransactionDate).Select(x => new
             {
                 Id = x.Id,
-                Year = x.AddDate.Year,
-                Month = x.AddDate.Month,
-                Day = x.AddDate.Day,
+                Year = x.TransactionDate.Year,
+                Month = x.TransactionDate.Month,
+                Day = x.TransactionDate.Day,
                 CashIn = x.IsCashIn == true ? x.Amount : 0,
                 CashOut = x.IsCashIn == false ? x.Amount : 0
 
@@ -382,6 +384,148 @@ namespace QFinans.Controllers
             }
 
             return View(reportData);
+        }
+
+        [CustomAuth(Roles = "UnRecordedPaparaDepositReport")]
+        // GET: Report
+        public ActionResult UnRecordedPaparaDeposit(DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo)
+        {
+            if (currentDateFrom == null)
+            {
+                currentDateFrom = DateTime.Now.Date;
+            }
+
+            IQueryable<UnRecordedDeposit> unRecordedDeposit = db.UnRecordedDeposit.Where(x => x.Papara == true && x.MoneyTransfer == false);
+
+            if (dateFrom == null) { dateFrom = currentDateFrom; }
+            ViewBag.CurrentDateFrom = dateFrom;
+            if (dateFrom.HasValue)
+                unRecordedDeposit = unRecordedDeposit.Where(x => x.AddDate >= dateFrom);
+
+            if (dateTo == null) { dateTo = currentDateTo; }
+            ViewBag.CurrentDateTo = dateTo;
+            if (dateTo.HasValue)
+                unRecordedDeposit = unRecordedDeposit.Where(x => x.AddDate <= dateTo);
+
+            return View(unRecordedDeposit);
+        }
+
+        [CustomAuth(Roles = "UnRecordedMoneyTransferDepositReport")]
+        // GET: Report
+        public ActionResult UnRecordedMoneyTransferDeposit(DateTime? currentDateFrom, DateTime? currentDateTo, DateTime? dateFrom, DateTime? dateTo)
+        {
+            if (currentDateFrom == null)
+            {
+                currentDateFrom = DateTime.Now.Date;
+            }
+
+            IQueryable<UnRecordedDeposit> unRecordedDeposit = db.UnRecordedDeposit.Where(x => x.Papara == false && x.MoneyTransfer == true);
+
+            if (dateFrom == null) { dateFrom = currentDateFrom; }
+            ViewBag.CurrentDateFrom = dateFrom;
+            if (dateFrom.HasValue)
+                unRecordedDeposit = unRecordedDeposit.Where(x => x.AddDate >= dateFrom);
+
+            if (dateTo == null) { dateTo = currentDateTo; }
+            ViewBag.CurrentDateTo = dateTo;
+            if (dateTo.HasValue)
+                unRecordedDeposit = unRecordedDeposit.Where(x => x.AddDate <= dateTo);
+
+            return View(unRecordedDeposit);
+        }
+
+
+        [CustomAuth(Roles = "AccountTransactionDetailsReport")]
+        public ActionResult AccountTransactionDetails(string organization)
+        {
+            IQueryable<ApiUsers> _organization = db.ApiUsers.Where(x => x.Job == null);
+            ViewBag.OrganizationList = _organization.ToList();
+
+            if (organization == null)
+            {
+                organization = _organization.FirstOrDefault().Organization;
+            }
+            else if (organization == "Coinbase")
+            {
+                organization = "Coinbase";
+            }
+            else
+            {
+                string _organizationUsername = _organization.Where(x => x.Organization == organization).FirstOrDefault().UserName;
+            }
+            ViewBag.Organization = organization;
+            return View();
+        }
+
+        [CustomAuth(Roles = "AccountTransactionDetailsReport")]
+        public ActionResult AccountTransactionToExcel(string tip, DateTime? date, bool deposit, string organization)
+        {
+            LocalReport lr = new LocalReport();
+            string path = Path.Combine(Server.MapPath("~/Reports"), "ReportAccountTransaction.rdlc");
+            
+            if (System.IO.File.Exists(path))
+            {
+                lr.ReportPath = path;
+            }
+            else
+            {
+                TempData["warning"] = "Rapor dosyası bulunamadı.";
+                return View("AccountTransactionDetails");
+            }
+
+            if (organization == null)
+            {
+                TempData["warning"] = "Organizasyon bulunamadı.";
+                return View("AccountTransactionDetails");
+            }
+
+            DateTime starDate = date ?? DateTime.Now;
+            DateTime endDate = starDate.AddDays(1);
+            ViewBag.Tip = tip;
+            ViewBag.Date = starDate;
+            ViewBag.Deposit = starDate;
+            ViewBag.Organization = organization;
+
+            var _addUser = db.ApiUsers.Where(x => x.Organization == organization).Select(x => x.UserName).FirstOrDefault();
+
+            List<AccountTransactions> at = new List<AccountTransactions>();
+
+            at = (from a in db.AccountTransactions where a.AddDate>= date && a.AddDate<endDate && a.AddUserId == _addUser && a.Deposit == deposit && a.IsCoin == false && a.IsMoneyTransfer == false select a).ToList();
+
+            ReportDataSource rdAccountTransactions = new ReportDataSource("DsAccountTransaction", at);
+
+            lr.DataSources.Add(rdAccountTransactions);
+
+            string reportType = tip;
+            string mimeType;
+            string encoding;
+            string fileNameExtension;
+
+            string deviceInfo =
+
+            "<DeviceInfo>" +
+            "  <OutputFormat>" + tip + "</OutputFormat>" +
+            "  <PageWidth>8.27in</PageWidth>" +
+            "  <PageHeight>11.69in</PageHeight>" +
+            "  <MarginTop>0in</MarginTop>" +
+            "  <MarginLeft>0.19685in</MarginLeft>" +
+            "  <MarginRight>0.07874in</MarginRight>" +
+            "  <MarginBottom>0.07874in</MarginBottom>" +
+            "</DeviceInfo>";
+
+            Warning[] warnings;
+            string[] streams;
+            byte[] renderedBytes;
+
+            renderedBytes = lr.Render(
+                reportType,
+                deviceInfo,
+                out mimeType,
+                out encoding,
+                out fileNameExtension,
+                out streams,
+                out warnings);
+            return File(renderedBytes, mimeType);
         }
 
         protected override void Dispose(bool disposing)
