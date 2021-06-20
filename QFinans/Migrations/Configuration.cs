@@ -375,6 +375,22 @@
 
             if (!roleManager.RoleExists("CallBackApiMoneyTransfers"))
                 roleManager.Create(new IdentityRole("CallBackApiMoneyTransfers"));
+
+            //PaparaxController
+            if (!roleManager.RoleExists("IndexPaparax"))
+                roleManager.Create(new IdentityRole("IndexPaparax"));
+
+            if (!roleManager.RoleExists("DetailsPaparax"))
+                roleManager.Create(new IdentityRole("DetailsPaparax"));
+
+            if (!roleManager.RoleExists("CreatePaparax"))
+                roleManager.Create(new IdentityRole("CreatePaparax"));
+
+            if (!roleManager.RoleExists("EditPaparax"))
+                roleManager.Create(new IdentityRole("EditPaparax"));
+
+            if (!roleManager.RoleExists("DeletePaparax"))
+                roleManager.Create(new IdentityRole("DeletePaparax"));
         }
     }
 }

@@ -19,7 +19,7 @@
         <h5 class="card-title">Hesap Verilemeyen Yatırımlar</h5>
         <hr />
 
-        @using (Html.BeginForm("Index", "Report", FormMethod.Get, new { @id = "formSearch" }))
+        @using (Html.BeginForm("UnRecordedPaparaDeposit", "Report", FormMethod.Get, new { @id = "formSearch" }))
         {
             <input name="Organization" type="hidden" value="@ViewBag.CurrentOrganization">
             <div class="row mb-4 align-items-end">

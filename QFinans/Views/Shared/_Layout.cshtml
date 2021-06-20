@@ -255,6 +255,11 @@
                                     <a class="dropdown-item" href="@Url.Action("Index", "MoneyTransferType")">İşlem Türü (H/EFT)</a>
                                 }
 
+                                @if (User.IsInRole("IndexPaparax"))
+                                {
+                                    <a class="dropdown-item" href="@Url.Action("Index", "Paparax")">Paparax</a>
+                                }
+
                                 @if (User.IsInRole("SystemParameters"))
                                 {
                                     <a class="dropdown-item" href="@Url.Action("Index", "SystemParameters")">Parametreler</a>

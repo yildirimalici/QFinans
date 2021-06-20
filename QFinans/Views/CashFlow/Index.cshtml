@@ -7,6 +7,7 @@
     var _date = DateTime.Now;
     ApplicationDbContext db = new ApplicationDbContext();
     var _user = db.Users.Find(User.Identity.GetUserId());
+    var _userList = db.Users.ToList();
 }
 
 <div class="card">
@@ -194,7 +195,7 @@
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
+                        <td title="@_userList.Where(x => x.Id == item.AddUserId).Select(x => x.UserName).DefaultIfEmpty("").FirstOrDefault()">
                             @Html.DisplayFor(modelItem => item.Id)
                         </td>
                         <td>

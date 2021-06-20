@@ -96,5 +96,7 @@ namespace QFinans.Models
         public DbSet<CallbackUrl> CallbackUrl { get; set; }
 
         public DbSet<UnRecordedDeposit> UnRecordedDeposit { get; set; }
+
+        public DbSet<Paparax> Paparax { get; set; }
     }
 }

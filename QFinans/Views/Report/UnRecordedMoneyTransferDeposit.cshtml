@@ -1,6 +1,11 @@
 ﻿@model IEnumerable<QFinans.Areas.Api.Models.UnRecordedDeposit>
+@using QFinans.Models;
+
 @{
     ViewBag.Title = "UnRecordedDeposit";
+
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _customerBankInfo = db.CustomerBankInfo.Where(x => x.IsDeleted == false).ToList();
 
     if (ViewBag.CurrentDateFrom != null)
     {
@@ -16,10 +21,10 @@
 
 <div class="card">
     <div class="card-body">
-        <h5 class="card-title">Hesap Verilemeyen Yatırımlar</h5>
+        <h5 class="card-title">Hesap Verilemeyen Yatırımlar (H/EFT)</h5>
         <hr />
 
-        @using (Html.BeginForm("Index", "Report", FormMethod.Get, new { @id = "formSearch" }))
+        @using (Html.BeginForm("UnRecordedMoneyTransferDeposit", "Report", FormMethod.Get, new { @id = "formSearch" }))
         {
             <input name="Organization" type="hidden" value="@ViewBag.CurrentOrganization">
             <div class="row mb-4 align-items-end">
@@ -51,7 +56,7 @@
                         <th>Kullanıcı Adı</th>
                         <th>İsim</th>
                         <th>Soyisim</th>
-                        <th>Müşteri Banka Id</th>
+                        <th>Müşteri Banka</th>
                         <th>Tutar</th>
                     </tr>
                 </thead>
@@ -63,7 +68,7 @@
                             <td class="text-right">@item.UserName</td>
                             <td class="text-right">@item.Name</td>
                             <td class="text-right">@item.SurName</td>
-                            <td>@item.CustomerBankInfoId</td>
+                            <td>@item.CustomerBankInfoId - @_customerBankInfo.Where(x => x.Id == (item.CustomerBankInfoId ?? 0)).Select(x => x.BankType.Name).FirstOrDefault()</td>
                             <td class="text-right">@item.Amount.ToString("N2")</td>
                         </tr>
                     }

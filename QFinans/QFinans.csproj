@@ -214,6 +214,7 @@
     <Compile Include="Areas\Api\Controllers\AccountTransactionController.cs" />
     <Compile Include="Areas\Api\Controllers\BotController.cs" />
     <Compile Include="Areas\Api\Controllers\CoinbaseController.cs" />
+    <Compile Include="Areas\Api\Controllers\DataTransferController.cs" />
     <Compile Include="Areas\Api\Controllers\DefinitionsController.cs" />
     <Compile Include="Areas\Api\Controllers\MoneyTransferController.cs" />
     <Compile Include="Areas\Api\Models\AccountInfoStatus.cs" />
@@ -241,6 +242,7 @@
     <Compile Include="Areas\Api\Models\MoneyTransfer.cs" />
     <Compile Include="Areas\Api\Models\MoneyTransferDepositViewModel.cs" />
     <Compile Include="Areas\Api\Models\MoneyTransferDrawViewModel.cs" />
+    <Compile Include="Areas\Api\Models\Paparax.cs" />
     <Compile Include="Areas\Api\Models\ShiftType.cs" />
     <Compile Include="Areas\Api\Models\ShiftTypeAccountInfo.cs" />
     <Compile Include="Areas\Api\Models\SimLocation.cs" />
@@ -267,6 +269,7 @@
     <Compile Include="Controllers\AccountTransactionsController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\MoneyTransfersController.cs" />
+    <Compile Include="Controllers\PaparaxController.cs" />
     <Compile Include="Controllers\ReportController.cs" />
     <Compile Include="Controllers\ShiftTypeController.cs" />
     <Compile Include="Controllers\SimLocationController.cs" />
@@ -2493,11 +2496,17 @@
     <Content Include="Views\Report\UnRecordedPaparaDeposit.cshtml" />
     <Content Include="Views\Report\UnRecordedMoneyTransferDeposit.cshtml" />
     <Content Include="Views\Report\AccountTransactionDetails.cshtml" />
+    <Content Include="Views\Paparax\Create.cshtml" />
+    <Content Include="Views\Paparax\Delete.cshtml" />
+    <Content Include="Views\Paparax\Details.cshtml" />
+    <Content Include="Views\Paparax\Edit.cshtml" />
+    <Content Include="Views\Paparax\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Areas\Api\Views\Bot\" />
     <Folder Include="Areas\Api\Views\Coinbase\" />
+    <Folder Include="Areas\Api\Views\DataTransfer\" />
     <Folder Include="Areas\Api\Views\Definitions\" />
     <Folder Include="Areas\Api\Views\MoneyTransfer\" />
     <Folder Include="Views\DrawSplit\" />
@@ -2512,7 +2521,7 @@
     <TypeScriptCompile Include="Scripts\index.d.ts" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Reports\ReportAccountTransaction.rdlc" />
+    <Content Include="Reports\ReportAccountTransaction.rdlc" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

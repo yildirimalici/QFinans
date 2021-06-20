@@ -535,6 +535,30 @@
                     </div>
                 </div>
 
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-header">Paparax</div>
+                        <div class="card-body">
+                            @foreach (var item in roles.Where(x => x.Name.EndsWith("Paparax")))
+                            {
+                                <div class="col-sm-3">
+                                    <div class="custom-control custom-checkbox">
+                                        @if (Model.Roles.Any(x => x.RoleId == item.Id))
+                                        {
+                                            <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name" checked>
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" class="custom-control-input" id="@item.Name" name="RoleName" value="@item.Name">
+                                        }
+                                        <label class="custom-control-label" for="@item.Name">@item.Name</label>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <hr />

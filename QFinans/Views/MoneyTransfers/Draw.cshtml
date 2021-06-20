@@ -251,7 +251,7 @@
                         </div>
 
                         <label for="bankInfo-@item.Id">Hesap</label>
-                        <select class="form-control mb-3 select2" id="bankInfo-@item.Id" name="bankInfoId">
+                        <select class="form-control mb-3 select2" id="bankInfo-@item.Id" name="bankInfoId" required>
                             <option value="">Seçiniz</option>
                             @foreach (var item2 in _bankInfo)
                             {

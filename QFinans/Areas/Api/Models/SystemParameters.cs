@@ -61,5 +61,8 @@ namespace QFinans.Areas.Api.Models
 
         [Display(Name = "Max Fast Limit")]
         public decimal MaxFastLimit { get; set; }
+
+        [Display(Name = "Paparax Bakiye Farkı")]
+        public decimal PaparaxBalaceDiff { get; set; }
     }
 }
