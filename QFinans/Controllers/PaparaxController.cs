@@ -71,9 +71,11 @@ namespace QFinans.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(Paparax paparax)
         {
+            var safe = db.AccountInfo.Where(a => a.IsDeleted == false && a.IsArchive == false).Select(x => x.Balance).DefaultIfEmpty(0).Sum() ?? 0;
             string _userId = User.Identity.GetUserId();
             if (ModelState.IsValid)
             {
+                paparax.Safe = safe;
                 paparax.AddDate = DateTime.Now;
                 paparax.AddUserId = _userId;
                 db.Paparax.Add(paparax);

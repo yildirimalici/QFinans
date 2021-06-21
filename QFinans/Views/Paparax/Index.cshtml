@@ -1,7 +1,11 @@
 ﻿@model IEnumerable<QFinans.Areas.Api.Models.Paparax>
+@using Microsoft.AspNet.Identity
+@using QFinans.Models;
 
 @{
     ViewBag.Title = "Paparax";
+    ApplicationDbContext db = new ApplicationDbContext();
+    var _userList = db.Users.ToList();
 }
 
 <div class="card">
@@ -21,22 +25,23 @@
                         Paparax Bakiye
                     </th>
                     <th>Toplam Kasa</th>
-                    @*<th></th>*@
+                    <th>Oluşturulma Tarihi</th>
                 </tr>
 
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td>
+                        <td title="@_userList.Where(x => x.Id == item.AddUserId).Select(x => x.UserName).DefaultIfEmpty("").FirstOrDefault()">
                             @Html.DisplayFor(modelItem => item.Id)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.Balance)
                         </td>
-                        <td>@ViewBag.Safe</td>
+                        <td>@Html.DisplayFor(modelItem => item.Safe)</td>
+                        <td>@Html.DisplayFor(modelItem => item.AddDate)</td>
                         @*<td>
-                            <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
-                        </td>*@
+                                <button type="submit" class="btn btn-xs btn-danger" data-toggle="modal" data-target="#exampleModal-@item.Id" title="Sil"><i class="far fa-trash-alt"></i></button>
+                            </td>*@
                     </tr>
                 }
 

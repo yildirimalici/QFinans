@@ -10,9 +10,13 @@ namespace QFinans.Areas.Api.Models
     {
         public int Id { get; set; }
 
-        [Display(Name = "Bakiye")]
+        [Display(Name = "Paparax Bakiye")]
         [DisplayFormat(DataFormatString = "{0:N2}")]
         public decimal Balance { get; set; }
+
+        [Display(Name = "Toplam Kasa")]
+        [DisplayFormat(DataFormatString = "{0:N2}")]
+        public decimal Safe { get; set; }
 
         public bool IsDeleted { get; set; }
 
