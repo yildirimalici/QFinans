@@ -34,5 +34,7 @@ namespace QFinans.Areas.Api.Models
         public bool MoneyTransfer { get; set; }
 
         public bool IsShowLastDepositForPendingDeposit { get; set; }
+
+        public int BrandId { get; set; }
     }
 }

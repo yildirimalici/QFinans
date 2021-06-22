@@ -67,6 +67,8 @@ namespace QFinans.Areas.Api.Models
 
         public string Reference { get; set; }
 
+        public int BrandId { get; set; }
+
         public virtual BankInfo BankInfo { get; set; }
         //public virtual MoneyTransferType MoneyTransferType { get; set; }
         public virtual CustomerBankInfo CustomerBankInfo { get; set; }

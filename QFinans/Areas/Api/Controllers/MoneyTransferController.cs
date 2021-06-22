@@ -142,6 +142,7 @@ namespace QFinans.Areas.Api.Controllers
                             unRecordedDeposit.MoneyTransfer = true;
                             unRecordedDeposit.AddDate = DateTime.Now;
                             unRecordedDeposit.AddUserId = _user.UserName;
+                            unRecordedDeposit.BrandId = _user.BrandId;
                             dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
                             dbContext.SaveChanges();
                         }
@@ -168,6 +169,7 @@ namespace QFinans.Areas.Api.Controllers
                             unRecordedDeposit.MoneyTransfer = true;
                             unRecordedDeposit.AddDate = DateTime.Now;
                             unRecordedDeposit.AddUserId = _user.UserName;
+                            unRecordedDeposit.BrandId = _user.BrandId;
                             dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
                             dbContext.SaveChanges();
                         }
@@ -194,6 +196,7 @@ namespace QFinans.Areas.Api.Controllers
                             unRecordedDeposit.MoneyTransfer = true;
                             unRecordedDeposit.AddDate = DateTime.Now;
                             unRecordedDeposit.AddUserId = _user.UserName;
+                            unRecordedDeposit.BrandId = _user.BrandId;
                             dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
                             dbContext.SaveChanges();
                         }
@@ -221,6 +224,7 @@ namespace QFinans.Areas.Api.Controllers
                             unRecordedDeposit.MoneyTransfer = true;
                             unRecordedDeposit.AddDate = DateTime.Now;
                             unRecordedDeposit.AddUserId = _user.UserName;
+                            unRecordedDeposit.BrandId = _user.BrandId;
                             dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
                             dbContext.SaveChanges();
                         }
@@ -254,6 +258,7 @@ namespace QFinans.Areas.Api.Controllers
                             moneyTransfer.Location = "api";
                             moneyTransfer.AddUserId = _user.UserName;
                             moneyTransfer.AddDate = DateTime.Now;
+                            moneyTransfer.BrandId = _user.BrandId;
                             context.MoneyTransfer.Add(moneyTransfer);
                             context.SaveChanges();
                         }
@@ -376,6 +381,7 @@ namespace QFinans.Areas.Api.Controllers
                                 moneyTransfer.Location = "api";
                                 moneyTransfer.AddUserId = _user.UserName;
                                 moneyTransfer.AddDate = DateTime.Now;
+                                moneyTransfer.BrandId = _user.BrandId;
                                 context.MoneyTransfer.Add(moneyTransfer);
                                 context.SaveChanges();
                             }
@@ -441,6 +447,15 @@ namespace QFinans.Areas.Api.Controllers
                 };
                 return Json(jsonObject);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

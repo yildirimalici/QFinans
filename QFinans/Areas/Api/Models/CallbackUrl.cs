@@ -18,5 +18,9 @@ namespace QFinans.Areas.Api.Models
         public string MoneyTransferDeposit { get; set; }
 
         public string MoneyTransferDraw { get; set; }
+
+        public int BrandId { get; set; }
+
+        public string BrandName { get; set; }
     }
 }

@@ -180,6 +180,7 @@ namespace QFinans.Areas.Api.Controllers
                                 unRecordedDeposit.MoneyTransfer = false;
                                 unRecordedDeposit.AddDate = DateTime.Now;
                                 unRecordedDeposit.AddUserId = _user.UserName;
+                                unRecordedDeposit.BrandId = _user.BrandId;
                                 dbContext.UnRecordedDeposit.Add(unRecordedDeposit);
                                 dbContext.SaveChanges();
                             }
@@ -206,6 +207,7 @@ namespace QFinans.Areas.Api.Controllers
                                 accountTransactions.Reference = depositViewModel.Reference;
                                 accountTransactions.Deposit = true;
                                 accountTransactions.TransactionStatus = TransactionStatus.New;
+                                accountTransactions.BrandId = _user.BrandId;
                                 if (redirectAccountInfo != null)
                                 {
                                     accountTransactions.AccountInfoId = redirectAccountInfo.Id;
@@ -372,6 +374,7 @@ namespace QFinans.Areas.Api.Controllers
                                 accountTransactions.CustomerAccountNumber = drawViewModel.CustomerAccountNumber;
                                 accountTransactions.AddUserId = _user.UserName;
                                 accountTransactions.AddDate = DateTime.Now;
+                                accountTransactions.BrandId = _user.BrandId;
                                 context.AccountTransactions.Add(accountTransactions);
                                 context.SaveChanges();
                             }

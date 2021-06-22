@@ -497,10 +497,9 @@ namespace QFinans.Controllers
         public ActionResult CallBackApi(int? transid)
         {
             MoneyTransfer moneyTransfer = db.MoneyTransfer.Find(transid);
-
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == moneyTransfer.BrandId).FirstOrDefault();
                 string _url;
                 if (moneyTransfer.Deposit == false)
                 {

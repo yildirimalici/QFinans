@@ -121,6 +121,8 @@ namespace QFinans.Areas.Api.Models
 
         public bool IsBotCheck { get; set; }
 
+        public int BrandId { get; set; }
+
         public virtual AccountInfo AccountInfo { get; set; }
 
         public ICollection<DrawSplit> DrawSplit { get; set; }

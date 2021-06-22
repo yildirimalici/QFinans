@@ -29,5 +29,7 @@ namespace QFinans.Areas.Api.Models
         public DateTime AddDate { get; set; }
 
         public string AddUserId { get; set; }
+
+        public int BrandId { get; set; }
     }
 }

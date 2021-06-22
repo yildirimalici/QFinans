@@ -774,8 +774,8 @@ namespace QFinans.Controllers
         [CustomAuth(Roles = "CallBackApiAccountTransactions")]
         public ActionResult CallBackApi(int? transid)
         {
-            var _callbackUrl = db.CallbackUrl.FirstOrDefault();
             AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
+            var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
             string _url;
             if (accountTransactions.IsCoin == true)
             {
@@ -917,10 +917,9 @@ namespace QFinans.Controllers
         public ActionResult CallBackApiHash(int? transid)
         {
             AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
-            
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
                 string _url;
                 if (accountTransactions.IsMoneyTransfer == true)
                 {
@@ -1153,11 +1152,10 @@ namespace QFinans.Controllers
         public ActionResult CallBackApiHashForPppropanel(int? transid)
         {
             AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
-
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
-                
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
+
                 string _url;
                 if (accountTransactions.IsMoneyTransfer == true)
                 {

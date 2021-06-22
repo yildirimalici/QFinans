@@ -543,7 +543,7 @@ namespace QFinans.Areas.Api.Controllers
             try
             {
                 AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
 
                 string _url;
                 if (accountTransactions.IsCoin == true)
@@ -692,8 +692,8 @@ namespace QFinans.Areas.Api.Controllers
         {
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
                 AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
                 string _url;
 
                 if (accountTransactions.IsCoin == true)
@@ -922,8 +922,8 @@ namespace QFinans.Areas.Api.Controllers
         {
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
                 AccountTransactions accountTransactions = db.AccountTransactions.Find(transid);
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == accountTransactions.BrandId).FirstOrDefault();
                 string _url;
 
                 if (accountTransactions.IsCoin == true)
@@ -1195,6 +1195,7 @@ namespace QFinans.Areas.Api.Controllers
                         accountTransactions.Location = "api";
                         accountTransactions.AddUserId = _user.UserName;
                         accountTransactions.AddDate = DateTime.Now;
+                        accountTransactions.BrandId = _user.BrandId;
                         context.AccountTransactions.Add(accountTransactions);
                         context.SaveChanges();
                     }
@@ -1236,6 +1237,15 @@ namespace QFinans.Areas.Api.Controllers
                 };
                 return Json(jsonObject);
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

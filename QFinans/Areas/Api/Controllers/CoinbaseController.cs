@@ -105,6 +105,7 @@ namespace QFinans.Areas.Api.Controllers
                                     accountTransactions.IsCoin = true;
                                     accountTransactions.AddUserId = _user.UserName;
                                     accountTransactions.AddDate = DateTime.Now;
+                                    accountTransactions.BrandId = _user.BrandId;
                                     context.AccountTransactions.Add(accountTransactions);
                                     context.SaveChanges();
 
@@ -340,6 +341,7 @@ namespace QFinans.Areas.Api.Controllers
                                     accountTransactions.IsCoin = true;
                                     accountTransactions.AddUserId = _user.UserName;
                                     accountTransactions.AddDate = DateTime.Now;
+                                    accountTransactions.BrandId = _user.BrandId;
                                     context.AccountTransactions.Add(accountTransactions);
                                     context.SaveChanges();
                                 }
@@ -607,7 +609,8 @@ namespace QFinans.Areas.Api.Controllers
         {
             try
             {
-                var _callbackUrl = db.CallbackUrl.FirstOrDefault();
+                AccountTransactions _accountTransaction = db.AccountTransactions.Find(transid);
+                var _callbackUrl = db.CallbackUrl.Where(x => x.BrandId == _accountTransaction.BrandId).FirstOrDefault();
                 //"https://www.app-dinamo.com/api/coinbase/callback"
                 var _url = _callbackUrl.Coinbase;
                 string data = GetCallBackApiData(transid);
@@ -729,6 +732,15 @@ namespace QFinans.Areas.Api.Controllers
                 string transaction = "";
                 return transaction;
             }
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
